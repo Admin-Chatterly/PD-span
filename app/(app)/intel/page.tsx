@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { IntelToolbar, type IntelFilters } from "@/components/intel/intel-toolbar"
+import { IntelToolbar } from "@/components/intel/intel-toolbar"
 import { TagBar } from "@/components/intel/tag-bar"
 import { NoteComposer } from "@/components/notes/note-composer"
 import { NoteList } from "@/components/notes/note-list"
@@ -14,6 +14,7 @@ import {
   NOTE_ATTACHMENTS,
   type NoteAttachment,
 } from "@/lib/data/notes"
+import type { IntelFilters } from "@/lib/intel"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata = { title: "Underrättelser" }

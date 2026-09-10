@@ -19,26 +19,7 @@ import {
   NOTE_SOURCE_LABELS,
 } from "@/lib/constants"
 import { NOTE_ATTACHMENTS, NOTE_ATTACHMENT_LABELS } from "@/lib/data/notes"
-
-export type IntelFilters = {
-  q: string
-  tag: string
-  source: string
-  confidence: string
-  attachment: string
-}
-
-/** Turn the current filters into the query string the intel page reads back. */
-export function intelHref(filters: Partial<IntelFilters>): string {
-  const params = new URLSearchParams()
-  if (filters.q?.trim()) params.set("q", filters.q.trim())
-  if (filters.tag) params.set("tag", filters.tag)
-  if (filters.source) params.set("source", filters.source)
-  if (filters.confidence) params.set("confidence", filters.confidence)
-  if (filters.attachment && filters.attachment !== "any") params.set("attachment", filters.attachment)
-  const qs = params.toString()
-  return qs ? `/intel?${qs}` : "/intel"
-}
+import { intelHref, type IntelFilters } from "@/lib/intel"
 
 export function IntelToolbar(filters: IntelFilters) {
   const router = useRouter()

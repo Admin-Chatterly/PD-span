@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { XIcon } from "lucide-react"
-import { intelHref, type IntelFilters } from "@/components/intel/intel-toolbar"
+import { intelHref, type IntelFilters } from "@/lib/intel"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
