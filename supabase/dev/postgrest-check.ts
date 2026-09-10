@@ -16,6 +16,7 @@ import { createHmac } from "node:crypto"
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 import { getDashboardData } from "@/lib/data/dashboard"
+import { getBoardGraph, listBoardScopes } from "@/lib/data/board"
 import { getCaseDetail, listCases } from "@/lib/data/cases"
 import { getOrganizationDetail, listOrganizations } from "@/lib/data/organizations"
 import {
@@ -280,6 +281,110 @@ async function main() {
   }
   assert.equal(await getOrganizationDetail(supabase, "nope"), null)
   assert.equal(await getCaseDetail(supabase, "nope"), null)
+
+  // --- case links: the database allows exactly one target per row ------------
+  if (seeded) {
+    const detailBefore = await getCaseDetail(supabase, CASE1)
+    assert(detailBefore)
+    assert.equal(detailBefore.organizationOptions.length, 3)
+
+    const linkPerson = await supabase
+      .from("case_links")
+      .insert({ case_id: CASE1, person_id: "b0000000-0000-4000-8000-000000000006", role: "witness" })
+      .select("id")
+      .single()
+    assert(!linkPerson.error, linkPerson.error?.message)
+
+    const duplicate = await supabase
+      .from("case_links")
+      .insert({ case_id: CASE1, person_id: "b0000000-0000-4000-8000-000000000006" })
+    assert.equal(duplicate.error?.code, "23505", "the same person cannot be linked twice")
+
+    const bothTargets = await supabase
+      .from("case_links")
+      .insert({ case_id: CASE1, person_id: "b0000000-0000-4000-8000-000000000006", organization_id: GSF })
+    assert.equal(bothTargets.error?.code, "23514", "a link points at one target, not two")
+
+    const noTarget = await supabase.from("case_links").insert({ case_id: CASE1 })
+    assert.equal(noTarget.error?.code, "23514", "a link must point at something")
+
+    const detailAfter = await getCaseDetail(supabase, CASE1)
+    assert(detailAfter)
+    assert.equal(detailAfter.people.length, detailBefore.people.length + 1)
+    assert(detailAfter.people.some((l) => l.role === "witness"))
+
+    // removeCaseLink reads the row before deleting so both sides get refreshed.
+    const target = await supabase
+      .from("case_links")
+      .select("case_id, person_id, organization_id")
+      .eq("id", linkPerson.data.id)
+      .maybeSingle()
+    assert(!target.error, target.error?.message)
+    assert.equal(target.data?.case_id, CASE1)
+    const unlink = await supabase.from("case_links").delete().eq("id", linkPerson.data.id)
+    assert(!unlink.error, unlink.error?.message)
+
+    const detailRestored = await getCaseDetail(supabase, CASE1)
+    assert(detailRestored)
+    assert.equal(detailRestored.people.length, detailBefore.people.length)
+  }
+
+  // --- board graph: edges are only drawn between nodes that are on it --------
+  const scopes = await listBoardScopes(supabase)
+  if (seeded) {
+    assert.equal(scopes.cases.length, 1)
+    assert.equal(scopes.organizations.length, 3)
+
+    const all = await getBoardGraph(supabase, { kind: "all" })
+    assert(all.ok, all.ok ? "" : all.error)
+    assert.equal(all.graph.people.length, 6)
+    assert.equal(all.graph.organizations.length, 3)
+    assert.equal(all.graph.memberships.length, 5)
+    assert.equal(all.graph.associates.length, 3)
+    assert.equal(all.graph.truncated, false)
+
+    // The case holds three people and two organizations. The memberships
+    // between them come along; the associate links do not, because the other
+    // end of each one is not linked to the case.
+    const byCase = await getBoardGraph(supabase, { kind: "case", id: CASE1 })
+    assert(byCase.ok, byCase.ok ? "" : byCase.error)
+    assert.equal(byCase.graph.people.length, 3)
+    assert.equal(byCase.graph.organizations.length, 2)
+    assert.equal(byCase.graph.memberships.length, 3)
+    assert.equal(byCase.graph.associates.length, 0)
+
+    // Grove Street has three members, two of whom are linked to each other.
+    const byOrg = await getBoardGraph(supabase, { kind: "organization", id: GSF })
+    assert(byOrg.ok, byOrg.ok ? "" : byOrg.error)
+    assert.equal(byOrg.graph.organizations.length, 1)
+    assert.equal(byOrg.graph.people.length, 3)
+    assert.equal(byOrg.graph.memberships.length, 3)
+    assert.equal(byOrg.graph.associates.length, 2)
+
+    // Every edge must reference a node that is actually present.
+    for (const graph of [all.graph, byCase.graph, byOrg.graph]) {
+      const peopleIds = new Set(graph.people.map((p) => p.id))
+      const orgIds = new Set(graph.organizations.map((o) => o.id))
+      for (const m of graph.memberships) {
+        assert(peopleIds.has(m.personId), "membership points at a missing person")
+        assert(orgIds.has(m.organizationId), "membership points at a missing organization")
+      }
+      for (const a of graph.associates) {
+        assert(peopleIds.has(a.personId) && peopleIds.has(a.associateId), "dangling associate edge")
+      }
+    }
+  }
+
+  // A scope that names nothing real is empty rather than an error.
+  const bogusScope = await getBoardGraph(supabase, { kind: "case", id: "not-a-uuid" })
+  assert(bogusScope.ok, bogusScope.ok ? "" : bogusScope.error)
+  assert.equal(bogusScope.graph.people.length, 0)
+  const missingOrg = await getBoardGraph(supabase, {
+    kind: "organization",
+    id: "a0000000-0000-4000-8000-0000000000ff",
+  })
+  assert(missingOrg.ok, missingOrg.ok ? "" : missingOrg.error)
+  assert.equal(missingOrg.graph.organizations.length, 0)
 
   // --- mutations, same shapes as the Server Actions -------------------------
   const created = await supabase

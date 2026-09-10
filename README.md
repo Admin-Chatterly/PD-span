@@ -106,7 +106,7 @@ have a database URL you can regenerate it:
 | `associates` | Person ↔ person links, undirected, one row per pair. |
 | `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing at all, which is how a tip gets recorded before anyone knows who it is about. Tags, source, confidence, and the author (from the session). Browse and filter them all at `/intel`. |
 | `vehicles` | Plates and models, optionally tied to a person. Plates are stored upper-case. |
-| `cases` / `case_links` | An investigation and the people/organizations in it. |
+| `cases` / `case_links` | An investigation and the people and organizations in it, each with a role in that case. A link points at exactly one of the two, which the database enforces. |
 | `evidence` | Links (Medal.tv clips, YouTube, Streamable, image URLs) or, later, uploads in the private `intel` bucket, attached to a person, organization or case. Clip links play inline. |
 | `profiles` | One row per login, holding the officer's callsign. |
 
@@ -117,6 +117,13 @@ evidence attached to the organization go with it.
 Tags live only on notes, so every tag filter in the app resolves through them:
 `/intel?tag=x` for the intel itself, `/people?tag=x` and `/organizations?tag=x`
 for everyone with a note carrying that tag.
+
+`/board` draws the corkboard: people and organizations as nodes, memberships
+and associate links as edges, laid out by a force simulation and clickable
+through to each record. A graph of the whole server is unreadable, so the board
+is scoped to one case or one organization by default, with everyone on file
+available deliberately. Edges are only drawn between nodes that are on the
+board, so a link never points at something off screen.
 
 Views `people_overview`, `organizations_overview`, `cases_overview` back the
 list pages. Functions: `search_all(term)` for global search, `merge_people(keep,
