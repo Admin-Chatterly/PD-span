@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end check of the data layer through a real PostgREST. Needs a LOCAL
-# Postgres (see scripts/db-check.sh, which this runs first) and a PostgREST
+# Postgres (rebuilt from the seed by scripts/db-reset.sh) and a PostgREST
 # binary (POSTGREST_BIN, default: `postgrest` on PATH).
 #
 #   DATABASE_URL=postgresql://postgres@127.0.0.1:5432/pdspan_check scripts/postgrest-check.sh
@@ -12,7 +12,7 @@ JWT_SECRET="${PGRST_JWT_SECRET:-local-dev-secret-at-least-32-characters-long}"
 USER_ID="00000000-0000-4000-8000-000000000001"
 cd "$(dirname "$0")/.."
 
-scripts/db-check.sh
+scripts/db-reset.sh
 
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q <<SQL
 do \$\$ begin

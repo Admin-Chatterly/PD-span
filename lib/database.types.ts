@@ -22,6 +22,7 @@ export type Database = {
           is_confirmed: boolean
           person_id: string
           relationship: string | null
+          url?: string | null
         }
         Insert: {
           associate_id: string
@@ -150,7 +151,8 @@ export type Database = {
           id: string
           organization_id: string | null
           person_id: string | null
-          storage_path: string
+          storage_path: string | null
+          url: string | null
         }
         Insert: {
           caption?: string | null
@@ -160,7 +162,8 @@ export type Database = {
           id?: string
           organization_id?: string | null
           person_id?: string | null
-          storage_path: string
+          storage_path?: string | null
+          url?: string | null
         }
         Update: {
           caption?: string | null

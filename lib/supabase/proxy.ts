@@ -1,8 +1,23 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
-import { getSupabaseEnv } from "@/lib/supabase/env"
+import { getSupabaseEnv, isSupabaseConfigured } from "@/lib/supabase/env"
 
 const PUBLIC_PATHS = ["/login"]
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
+
+function redirectToLogin(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const loginUrl = request.nextUrl.clone()
+  loginUrl.pathname = "/login"
+  loginUrl.search = ""
+  if (pathname !== "/") {
+    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`)
+  }
+  return NextResponse.redirect(loginUrl)
+}
 
 /**
  * Runs on every request (see proxy.ts): refreshes the Supabase session cookie
@@ -10,6 +25,16 @@ const PUBLIC_PATHS = ["/login"]
  * verify the user themselves; this is the outer wall, not the only one.
  */
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const isPublic = isPublicPath(pathname)
+
+  // Without connection settings nothing can be verified. Rather than failing
+  // every request, send visitors to the login page, which explains what is
+  // missing.
+  if (!isSupabaseConfigured()) {
+    return isPublic ? NextResponse.next({ request }) : redirectToLogin(request)
+  }
+
   let response = NextResponse.next({ request })
   const { url, key } = getSupabaseEnv()
 
@@ -32,17 +57,8 @@ export async function updateSession(request: NextRequest) {
   const { data, error } = await supabase.auth.getClaims()
   const isSignedIn = !error && Boolean(data?.claims?.sub)
 
-  const { pathname } = request.nextUrl
-  const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
-
   if (!isSignedIn && !isPublic) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = "/login"
-    loginUrl.search = ""
-    if (pathname !== "/") {
-      loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`)
-    }
-    return NextResponse.redirect(loginUrl)
+    return redirectToLogin(request)
   }
 
   if (isSignedIn && isPublic) {

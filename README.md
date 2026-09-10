@@ -14,8 +14,8 @@ Storage) · Tailwind 4 + shadcn/ui · Vercel.
 Create a project at supabase.com (free tier is fine; Stockholm is the closest
 region). Then:
 
-- **Schema.** Open the SQL editor, paste the whole of
-  `supabase/migrations/0001_init.sql`, run it. Alternatively use the CLI:
+- **Schema.** Open the SQL editor and run every file in `supabase/migrations/`
+  in name order, each pasted whole. Alternatively use the CLI:
   `npx supabase link --project-ref <ref>` then `npx supabase db push`.
 - **Auth.** Authentication → Sign In / Providers → Email: enabled.
   Authentication → Settings: turn **off** "Allow new users to sign up" so only
@@ -38,7 +38,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon or publishable key>
 ```
 
 Set them in the Vercel project (Settings → Environment Variables) and in
-`.env.local` for local development (see `.env.example`).
+`.env.local` for local development (see `.env.example`). In Vercel, tick
+**Production, Preview and Development** for each variable, otherwise branch
+previews run without a database; variables only take effect on a new
+deployment, so redeploy after adding them. The server also accepts the
+Supabase integration's names (`SUPABASE_URL`, `SUPABASE_ANON_KEY`). An
+unconfigured deployment shows a setup notice on the login page instead of
+failing.
 
 ### 3. Deploy
 
@@ -88,7 +94,7 @@ have a database URL you can regenerate it:
 | `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing. Tags, source, confidence, and the author (from the session). |
 | `vehicles` | Plates and models, optionally tied to a person. Plates are stored upper-case. |
 | `cases` / `case_links` | An investigation and the people/organizations in it. |
-| `evidence` | Images in the private `intel` storage bucket, attached to a person, organization or case. |
+| `evidence` | Links (Medal.tv clips, YouTube, Streamable, image URLs) or, later, uploads in the private `intel` bucket, attached to a person, organization or case. Clip links play inline. |
 | `profiles` | One row per login, holding the officer's callsign. |
 
 Views `people_overview`, `organizations_overview`, `cases_overview` back the

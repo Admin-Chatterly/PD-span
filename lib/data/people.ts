@@ -1,5 +1,7 @@
 import { cache } from "react"
 import type { Tables, Views } from "@/lib/database.types"
+import { EVIDENCE_SELECT, type EvidenceRow } from "@/lib/data/evidence"
+import { NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
 import { parseAffiliations, type OrganizationAffiliation } from "@/lib/format"
 import type { Client } from "@/lib/supabase/types"
 
@@ -165,12 +167,6 @@ export type AssociateRow = {
   other: { id: string; name: string | null; alias: string | null; description: string | null; status: string }
 }
 
-export type NoteRow = Tables<"notes"> & {
-  author: { callsign: string | null } | null
-  organization: { id: string; name: string } | null
-  case: { id: string; title: string } | null
-}
-
 export type CaseLinkRow = {
   id: string
   role: string | null
@@ -186,7 +182,7 @@ export type PersonDetail = {
   vehicles: Tables<"vehicles">[]
   notes: NoteRow[]
   caseLinks: CaseLinkRow[]
-  evidenceCount: number
+  evidence: EvidenceRow[]
   organizationOptions: OrganizationOption[]
   createdBy: string | null
 }
@@ -229,14 +225,18 @@ export const getPersonDetail = cache(async (supabase: Client, id: string): Promi
       supabase.from("vehicles").select("*").eq("person_id", id).order("created_at", { ascending: true }),
       supabase
         .from("notes")
-        .select("*, author:profiles(callsign), organization:organizations(id, name), case:cases(id, title)")
+        .select(NOTE_SELECT)
         .eq("person_id", id)
         .order("created_at", { ascending: false }),
       supabase
         .from("case_links")
         .select("id, role, case:cases(id, title, status)")
         .eq("person_id", id),
-      supabase.from("evidence").select("id", { count: "exact", head: true }).eq("person_id", id),
+      supabase
+        .from("evidence")
+        .select(EVIDENCE_SELECT)
+        .eq("person_id", id)
+        .order("created_at", { ascending: false }),
       supabase.from("organizations").select("id, name, type").order("name"),
       person.created_by
         ? supabase.from("profiles").select("callsign").eq("id", person.created_by).maybeSingle()
@@ -270,7 +270,7 @@ export const getPersonDetail = cache(async (supabase: Client, id: string): Promi
     vehicles: vehicles.data ?? [],
     notes: (notes.data ?? []) as unknown as NoteRow[],
     caseLinks: ((caseLinks.data ?? []) as unknown as CaseLinkRow[]).filter((l) => l.case),
-    evidenceCount: evidence.count ?? 0,
+    evidence: (evidence.data ?? []) as unknown as EvidenceRow[],
     organizationOptions: organizations.data ?? [],
     createdBy: creator.data?.callsign ?? null,
   }

@@ -105,6 +105,32 @@ begin
   end;
 end $$;
 
+-- Evidence: a link or a file, never both or neither; links must be http(s).
+do $$
+declare eid uuid;
+begin
+  insert into public.evidence (person_id, url, caption)
+  values ('b0000000-0000-4000-8000-000000000001', 'https://medal.tv/games/gta-v/clips/abc123/xyz?invite=cr-1', 'Clip')
+  returning id into eid;
+  delete from public.evidence where id = eid;
+  begin
+    insert into public.evidence (person_id) values ('b0000000-0000-4000-8000-000000000001');
+    raise exception 'evidence with neither file nor url should fail';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into public.evidence (person_id, storage_path, url)
+    values ('b0000000-0000-4000-8000-000000000001', 'x', 'https://example.com/a.png');
+    raise exception 'evidence with both file and url should fail';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into public.evidence (person_id, url) values ('b0000000-0000-4000-8000-000000000001', 'javascript:alert(1)');
+    raise exception 'non-http url should fail';
+  exception when check_violation then null;
+  end;
+end $$;
+
 -- Overview views.
 do $$
 declare r record;

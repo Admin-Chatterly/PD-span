@@ -5,10 +5,10 @@ import { ArrowLeftIcon } from "lucide-react"
 import { AssociatesSection } from "@/components/people/associates-section"
 import { CaseLinksSection } from "@/components/people/case-links-section"
 import { DangerZone } from "@/components/people/danger-zone"
-import { EvidencePlaceholder } from "@/components/people/evidence-placeholder"
 import { IdentityCard } from "@/components/people/identity-card"
 import { MembershipsSection } from "@/components/people/memberships-section"
-import { NotesSection } from "@/components/people/notes-section"
+import { EvidenceSection } from "@/components/evidence/evidence-section"
+import { NotesSection } from "@/components/notes/notes-section"
 import { VehiclesSection } from "@/components/people/vehicles-section"
 import { Button } from "@/components/ui/button"
 import { getPersonDetail, listTagSuggestions } from "@/lib/data/people"
@@ -45,7 +45,12 @@ export default async function PersonPage(props: PageProps<"/people/[id]">) {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
-          <NotesSection personId={person.id} notes={detail.notes} tagSuggestions={tagSuggestions} />
+          <NotesSection
+            target={{ personId: person.id }}
+            notes={detail.notes}
+            tagSuggestions={tagSuggestions}
+            emptyText="Nothing logged yet. The first note usually explains why this person is on the board."
+          />
         </div>
         <div className="flex flex-col gap-4">
           <MembershipsSection
@@ -56,7 +61,7 @@ export default async function PersonPage(props: PageProps<"/people/[id]">) {
           <AssociatesSection personId={person.id} associates={detail.associates} />
           <VehiclesSection personId={person.id} vehicles={detail.vehicles} />
           <CaseLinksSection caseLinks={detail.caseLinks} />
-          <EvidencePlaceholder count={detail.evidenceCount} />
+          <EvidenceSection target={{ personId: person.id }} items={detail.evidence} />
           <DangerZone
             person={person}
             counts={{
@@ -65,7 +70,7 @@ export default async function PersonPage(props: PageProps<"/people/[id]">) {
               memberships: detail.memberships.length,
               associates: detail.associates.length,
               caseLinks: detail.caseLinks.length,
-              evidence: detail.evidenceCount,
+              evidence: detail.evidence.length,
             }}
           />
         </div>

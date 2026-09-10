@@ -16,6 +16,8 @@ import { createHmac } from "node:crypto"
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 import { getDashboardData } from "@/lib/data/dashboard"
+import { getCaseDetail, listCases } from "@/lib/data/cases"
+import { getOrganizationDetail, listOrganizations } from "@/lib/data/organizations"
 import { getPersonDetail, listPeople, listTagSuggestions, searchPeople } from "@/lib/data/people"
 
 const POSTGREST_URL = process.env.POSTGREST_URL ?? "http://127.0.0.1:3100"
@@ -25,6 +27,7 @@ const USER_ID = process.env.CHECK_USER_ID ?? "00000000-0000-4000-8000-0000000000
 const MIKE = "b0000000-0000-4000-8000-000000000001"
 const RED_MASK = "b0000000-0000-4000-8000-000000000004"
 const GSF = "a0000000-0000-4000-8000-000000000001"
+const CASE1 = "d0000000-0000-4000-8000-000000000001"
 
 function mintJwt(claims: Record<string, unknown>): string {
   const enc = (v: string) => Buffer.from(v).toString("base64url")
@@ -145,7 +148,7 @@ async function main() {
   assert.equal(detail.notes[0]?.author, null)
   assert.equal(detail.caseLinks.length, 1)
   assert.equal(detail.caseLinks[0]?.case.status, "open")
-  assert.equal(detail.evidenceCount, 0)
+  assert.equal(detail.evidence.length, 0)
   assert.equal(detail.organizationOptions.length, 3)
   }
   assert.equal(await getPersonDetail(supabase, "b0000000-0000-4000-8000-0000000000ff"), null)
@@ -165,6 +168,34 @@ async function main() {
     assert(dash.recentNotes.some((n) => n.case?.title === "Operation Green Light"))
     assert.equal(dash.recentPeople.length, 6)
   }
+
+  // --- organizations and cases ----------------------------------------------
+  const orgList = await listOrganizations(supabase)
+  assert(orgList.ok, orgList.ok ? "" : orgList.error)
+  if (seeded) assert.equal(orgList.organizations.length, 3)
+  const gsf = await getOrganizationDetail(supabase, GSF)
+  if (seeded) assert(gsf)
+  if (gsf) {
+    assert.equal(gsf.members.length, 3)
+    assert(gsf.members.some((m) => m.person.id === MIKE && m.role === "leader"))
+    assert.equal(gsf.notes.length, 1)
+    assert.equal(gsf.notes[0]?.person?.id, MIKE)
+    assert.equal(gsf.caseLinks.length, 1)
+    assert.equal(gsf.evidence.length, 0)
+  }
+  const caseList = await listCases(supabase)
+  assert(caseList.ok, caseList.ok ? "" : caseList.error)
+  if (seeded) assert.equal(caseList.cases.length, 1)
+  const greenLight = await getCaseDetail(supabase, CASE1)
+  if (seeded) assert(greenLight)
+  if (greenLight) {
+    assert.equal(greenLight.people.length, 3)
+    assert.equal(greenLight.organizations.length, 2)
+    assert.equal(greenLight.notes.length, 2)
+    assert(greenLight.notes.every((n) => n.case?.id === CASE1))
+  }
+  assert.equal(await getOrganizationDetail(supabase, "nope"), null)
+  assert.equal(await getCaseDetail(supabase, "nope"), null)
 
   // --- mutations, same shapes as the Server Actions -------------------------
   const created = await supabase
@@ -226,6 +257,22 @@ async function main() {
   const search = await supabase.rpc("search_all", { term: "check two", per_type: 5 })
   assert(!search.error, search.error?.message)
   assert(search.data.some((r) => r.kind === "person" && r.id === b))
+
+  // --- evidence links ---------------------------------------------------------
+  const ev = await supabase
+    .from("evidence")
+    .insert({ person_id: b, url: "https://medal.tv/games/gta-v/clips/abc123/xyz?invite=cr-1", caption: "clip" })
+    .select("id, url, created_by")
+    .single()
+  assert(!ev.error, ev.error?.message)
+  assert.equal(ev.data.created_by, userId)
+  const badEv = await supabase.from("evidence").insert({ person_id: b, url: "javascript:alert(1)" })
+  assert.equal(badEv.error?.code, "23514", "non-http evidence url rejected")
+  const withEv = await getPersonDetail(supabase, b)
+  assert(withEv)
+  assert.equal(withEv.evidence.length, 1)
+  assert.equal(withEv.evidence[0]?.url, ev.data.url)
+  assert.equal(withEv.evidence[0]?.author?.callsign, live ? withEv.evidence[0]?.author?.callsign : "Tester")
 
   const del = await supabase.from("people").delete().eq("id", b)
   assert(!del.error, del.error?.message)

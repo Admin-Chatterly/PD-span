@@ -8,15 +8,9 @@ import { CONFIDENCES, NOTE_SOURCES, PERSON_STATUSES } from "@/lib/constants"
 import { searchPeople, type PersonPick } from "@/lib/data/people"
 import { createClient } from "@/lib/supabase/server"
 
-/** Shape shared by every form action driven through useActionState. */
-export type FormState = {
-  ok?: boolean
-  error?: string
-  /** Bumped on success so forms can reset themselves. */
-  version?: number
-}
+import type { ActionResult, FormState } from "@/lib/action-types"
 
-export type ActionResult = { ok: true } | { ok: false; error: string }
+export type { ActionResult, FormState }
 
 const uuid = z.uuid()
 
@@ -402,16 +396,23 @@ export async function addNote(_prev: FormState, formData: FormData): Promise<For
   return { ok: true, version: Date.now() }
 }
 
-export async function deleteNote(noteId: string, personId: string | null): Promise<ActionResult> {
+export async function deleteNote(noteId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(noteId)
   if (!id.success) return { ok: false, error: "Invalid id." }
 
   const supabase = await createClient()
+  const { data: note } = await supabase
+    .from("notes")
+    .select("person_id, organization_id, case_id")
+    .eq("id", id.data)
+    .maybeSingle()
   const { error } = await supabase.from("notes").delete().eq("id", id.data)
   if (error) return { ok: false, error: error.message }
 
-  if (personId) revalidatePerson(personId)
+  if (note?.person_id) revalidatePerson(note.person_id)
+  if (note?.organization_id) revalidatePath(`/organizations/${note.organization_id}`)
+  if (note?.case_id) revalidatePath(`/cases/${note.case_id}`)
   revalidatePath("/")
   return { ok: true }
 }
