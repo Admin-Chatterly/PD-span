@@ -1,13 +1,14 @@
+import { cache } from "react"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import type { Database } from "@/lib/database.types"
 import { getSupabaseEnv } from "@/lib/supabase/env"
 
 /**
- * Server-side client bound to the current request's cookies. Create a fresh one
- * per render or action; never share across requests.
+ * Server-side client bound to the current request's cookies. Memoised per
+ * request (React cache), never shared across requests.
  */
-export async function createClient() {
+export const createClient = cache(async () => {
   const cookieStore = await cookies()
   const { url, key } = getSupabaseEnv()
 
@@ -28,4 +29,4 @@ export async function createClient() {
       },
     },
   })
-}
+})

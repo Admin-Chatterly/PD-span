@@ -18,12 +18,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getDashboardData } from "@/lib/data/dashboard"
+import { createClient } from "@/lib/supabase/server"
 import { isUnidentified, personLabel, personSecondary, truncate } from "@/lib/format"
 
 export const metadata = { title: "Dashboard" }
 
 export default async function DashboardPage() {
-  const data = await getDashboardData()
+  const supabase = await createClient()
+  const data = await getDashboardData(supabase)
 
   return (
     <div className="flex flex-col gap-6">

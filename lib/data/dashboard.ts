@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import type { Client } from "@/lib/supabase/types"
 import { toPersonSummary, type PersonSummary } from "@/lib/data/people"
 
 export type RecentNote = {
@@ -28,8 +28,7 @@ export type DashboardData =
  * returned rather than thrown so the page can explain them (a missing
  * migration is the usual cause right after setup).
  */
-export async function getDashboardData(): Promise<DashboardData> {
-  const supabase = await createClient()
+export async function getDashboardData(supabase: Client): Promise<DashboardData> {
   const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString()
 
   const [people, organizations, openCases, notesThisWeek, recentPeople, recentNotes] =

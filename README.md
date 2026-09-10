@@ -66,6 +66,13 @@ schemas), every migration, the seed, and the assertions in
 `supabase/dev/checks.sql`. It drops the public schema first, so never point it
 at a real project.
 
+With a PostgREST binary on your PATH, `pnpm db:check:postgrest` goes one step
+further and runs the app's data layer and the query shapes its Server Actions
+use through a real PostgREST on that database. The same script runs against
+the live project when `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`E2E_EMAIL` and `E2E_PASSWORD` are set: `pnpm exec tsx supabase/dev/postgrest-check.ts`.
+It cleans up everything it creates.
+
 `lib/database.types.ts` is written by hand to match the migration. Once you
 have a database URL you can regenerate it:
 `SUPABASE_DB_URL=postgresql://... pnpm types:gen`.
