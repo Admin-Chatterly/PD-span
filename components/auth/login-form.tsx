@@ -16,7 +16,7 @@ import {
 
 const initialState: LoginState = {}
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({ next, notice }: { next: string; notice?: string | null }) {
   const [state, formAction, pending] = useActionState(signIn, initialState)
 
   return (
@@ -31,6 +31,11 @@ export function LoginForm({ next }: { next: string }) {
       <CardContent>
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="next" value={next} />
+          {notice && !state.error ? (
+            <p role="status" className="rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+              {notice}
+            </p>
+          ) : null}
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
