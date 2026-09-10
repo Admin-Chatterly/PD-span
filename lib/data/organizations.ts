@@ -1,7 +1,7 @@
 import { cache } from "react"
 import type { Tables, Views } from "@/lib/database.types"
 import { EVIDENCE_SELECT, type EvidenceRow } from "@/lib/data/evidence"
-import { NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
+import { idsTaggedWith, NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
 import type { Client } from "@/lib/supabase/types"
 
 export type OrganizationSummary = {
@@ -41,13 +41,24 @@ export type OrganizationsListResult =
   | { ok: true; organizations: OrganizationSummary[] }
   | { ok: false; error: string }
 
-export async function listOrganizations(supabase: Client): Promise<OrganizationsListResult> {
-  const { data, error } = await supabase
+export async function listOrganizations(
+  supabase: Client,
+  params: { tag?: string } = {}
+): Promise<OrganizationsListResult> {
+  let query = supabase
     .from("organizations_overview")
     .select("*")
     .order("status", { ascending: true })
     .order("name", { ascending: true })
     .limit(500)
+
+  if (params.tag) {
+    const ids = await idsTaggedWith(supabase, params.tag, "organization_id")
+    if (ids.length === 0) return { ok: true, organizations: [] }
+    query = query.in("id", ids)
+  }
+
+  const { data, error } = await query
   if (error) return { ok: false, error: error.message }
   return { ok: true, organizations: (data ?? []).map(toOrganizationSummary) }
 }

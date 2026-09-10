@@ -15,7 +15,7 @@ import { RelativeTime } from "@/components/relative-time"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getCaseDetail } from "@/lib/data/cases"
-import { listTagSuggestions } from "@/lib/data/people"
+import { listTagSuggestions } from "@/lib/data/notes"
 import { isUnidentified, personLabel } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
 

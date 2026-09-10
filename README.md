@@ -72,12 +72,25 @@ schemas), every migration, the seed, and the assertions in
 `supabase/dev/checks.sql`. It drops the public schema first, so never point it
 at a real project.
 
-With a PostgREST binary on your PATH, `pnpm db:check:postgrest` goes one step
-further and runs the app's data layer and the query shapes its Server Actions
-use through a real PostgREST on that database. The same script runs against
-the live project when `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-`E2E_EMAIL` and `E2E_PASSWORD` are set: `pnpm exec tsx supabase/dev/postgrest-check.ts`.
-It cleans up everything it creates.
+`pnpm db:check:postgrest` goes one step further and runs the app's own data
+layer, and the query shapes its Server Actions use, through a real PostgREST on
+that database. This is the check that catches what TypeScript cannot: embedded
+selects, foreign-key hints, `or()` and `contains()` filters, RPC argument names
+and error codes.
+
+```
+POSTGREST_BIN=/path/to/postgrest \
+DATABASE_URL=postgresql://postgres@127.0.0.1:5432/pdspan_check \
+pnpm db:check:postgrest
+```
+
+The binary is a single static file from the
+[PostgREST releases](https://github.com/PostgREST/postgrest/releases); the Linux
+asset is named `postgrest-<version>-linux-static-x86-64.tar.xz`. The same script
+runs against the live project when `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `E2E_EMAIL` and `E2E_PASSWORD` are set:
+`pnpm exec tsx supabase/dev/postgrest-check.ts`. It cleans up everything it
+creates.
 
 `lib/database.types.ts` is written by hand to match the migration. Once you
 have a database URL you can regenerate it:
@@ -91,7 +104,7 @@ have a database URL you can regenerate it:
 | `organizations` | Gangs, crews, cartels, businesses. |
 | `memberships` | People ↔ organizations, with a role and a confirmed/suspected flag. Managed from either side. |
 | `associates` | Person ↔ person links, undirected, one row per pair. |
-| `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing. Tags, source, confidence, and the author (from the session). |
+| `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing at all, which is how a tip gets recorded before anyone knows who it is about. Tags, source, confidence, and the author (from the session). Browse and filter them all at `/intel`. |
 | `vehicles` | Plates and models, optionally tied to a person. Plates are stored upper-case. |
 | `cases` / `case_links` | An investigation and the people/organizations in it. |
 | `evidence` | Links (Medal.tv clips, YouTube, Streamable, image URLs) or, later, uploads in the private `intel` bucket, attached to a person, organization or case. Clip links play inline. |
@@ -100,6 +113,10 @@ have a database URL you can regenerate it:
 Deleting an organization keeps the intel: notes are detached rather than
 deleted, and members keep their own records. Memberships, case links and
 evidence attached to the organization go with it.
+
+Tags live only on notes, so every tag filter in the app resolves through them:
+`/intel?tag=x` for the intel itself, `/people?tag=x` and `/organizations?tag=x`
+for everyone with a note carrying that tag.
 
 Views `people_overview`, `organizations_overview`, `cases_overview` back the
 list pages. Functions: `search_all(term)` for global search, `merge_people(keep,

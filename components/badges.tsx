@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import {
   CASE_STATUSES,
@@ -92,10 +93,28 @@ export function MembershipBadge({ isConfirmed, className }: { isConfirmed: boole
   )
 }
 
-export function TagBadge({ tag, className }: { tag: string; className?: string }) {
-  return (
+/**
+ * Tags are the cross-cutting filter, so every one of them is a way into the
+ * intel page filtered by that tag.
+ */
+export function TagBadge({
+  tag,
+  className,
+  linked = true,
+}: {
+  tag: string
+  className?: string
+  linked?: boolean
+}) {
+  const badge = (
     <Badge variant="secondary" className={cn("font-mono text-xs", className)}>
       #{tag}
     </Badge>
+  )
+  if (!linked) return badge
+  return (
+    <Link href={`/intel?tag=${encodeURIComponent(tag)}`} title={`Show intel tagged ${tag}`}>
+      {badge}
+    </Link>
   )
 }

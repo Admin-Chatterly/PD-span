@@ -2,6 +2,8 @@ import { cache } from "react"
 import type { Tables, Views } from "@/lib/database.types"
 import { EVIDENCE_SELECT, type EvidenceRow } from "@/lib/data/evidence"
 import { NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
+import { isUuid, likePattern, uuidList } from "@/lib/data/filters"
+import { idsTaggedWith } from "@/lib/data/notes"
 import { parseAffiliations, type OrganizationAffiliation } from "@/lib/format"
 import type { Client } from "@/lib/supabase/types"
 
@@ -50,17 +52,13 @@ export type PeopleListParams = {
   q?: string
   status?: string
   sort?: PeopleSort
+  /** Everyone with at least one note carrying this tag. */
+  tag?: string
 }
 
 export type PeopleListResult =
   | { ok: true; people: PersonSummary[]; total: number }
   | { ok: false; error: string }
-
-/** Escape a user string for use inside a PostgREST ilike pattern and filter list. */
-function likePattern(term: string): string {
-  const escaped = term.replace(/[\\%_]/g, (c) => `\\${c}`).replace(/"/g, '\\"')
-  return `"%${escaped}%"`
-}
 
 function normalizePlate(term: string): string {
   return term.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
@@ -84,7 +82,7 @@ export async function listPeople(supabase: Client, params: PeopleListParams): Pr
         .not("person_id", "is", null)
         .ilike("plate", `%${plate}%`)
         .limit(200)
-      const ids = Array.from(new Set((vehicles ?? []).map((v) => v.person_id).filter(Boolean))) as string[]
+      const ids = uuidList((vehicles ?? []).map((v) => v.person_id))
       if (ids.length > 0) filters.push(`id.in.(${ids.join(",")})`)
     }
     query = query.or(filters.join(","))
@@ -92,6 +90,12 @@ export async function listPeople(supabase: Client, params: PeopleListParams): Pr
 
   if (params.status) {
     query = query.eq("status", params.status)
+  }
+
+  if (params.tag) {
+    const ids = await idsTaggedWith(supabase, params.tag, "person_id")
+    if (ids.length === 0) return { ok: true, people: [], total: 0 }
+    query = query.in("id", ids)
   }
 
   switch (params.sort ?? "updated") {
@@ -139,7 +143,7 @@ export async function searchPeople(supabase: Client, term: string, excludeIds: s
     const pattern = likePattern(clean)
     query = query.or(`name.ilike.${pattern},alias.ilike.${pattern},description.ilike.${pattern}`)
   }
-  const valid = excludeIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id))
+  const valid = uuidList(excludeIds)
   if (valid.length > 0) {
     query = query.not("id", "in", `(${valid.join(",")})`)
   }
@@ -199,7 +203,7 @@ type RawAssociate = {
 
 /** Everything the person page needs. Memoised per request so metadata and page share one fetch. */
 export const getPersonDetail = cache(async (supabase: Client, id: string): Promise<PersonDetail | null> => {
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return null
+  if (!isUuid(id)) return null
 
   const { data: person, error: personError } = await supabase
     .from("people")
@@ -275,9 +279,3 @@ export const getPersonDetail = cache(async (supabase: Client, id: string): Promi
     createdBy: creator.data?.callsign ?? null,
   }
 })
-
-/** Tag suggestions for the note composer. */
-export async function listTagSuggestions(supabase: Client): Promise<string[]> {
-  const { data } = await supabase.rpc("distinct_tags")
-  return (data ?? []).map((t) => t.tag).slice(0, 50)
-}

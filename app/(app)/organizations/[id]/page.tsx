@@ -11,7 +11,7 @@ import { RosterSection } from "@/components/organizations/roster-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getOrganizationDetail } from "@/lib/data/organizations"
-import { listTagSuggestions } from "@/lib/data/people"
+import { listTagSuggestions } from "@/lib/data/notes"
 import { createClient } from "@/lib/supabase/server"
 
 export async function generateMetadata(props: PageProps<"/organizations/[id]">): Promise<Metadata> {

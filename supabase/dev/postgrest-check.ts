@@ -18,7 +18,14 @@ import type { Database } from "@/lib/database.types"
 import { getDashboardData } from "@/lib/data/dashboard"
 import { getCaseDetail, listCases } from "@/lib/data/cases"
 import { getOrganizationDetail, listOrganizations } from "@/lib/data/organizations"
-import { getPersonDetail, listPeople, listTagSuggestions, searchPeople } from "@/lib/data/people"
+import {
+  idsTaggedWith,
+  listNoteTargets,
+  listNotes,
+  listTagSuggestions,
+  listTags,
+} from "@/lib/data/notes"
+import { getPersonDetail, listPeople, searchPeople } from "@/lib/data/people"
 
 const POSTGREST_URL = process.env.POSTGREST_URL ?? "http://127.0.0.1:3100"
 const JWT_SECRET = process.env.PGRST_JWT_SECRET ?? "local-dev-secret-at-least-32-characters-long"
@@ -167,6 +174,83 @@ async function main() {
     assert(dash.recentNotes.some((n) => n.person?.id === MIKE))
     assert(dash.recentNotes.some((n) => n.case?.title === "Operation Green Light"))
     assert.equal(dash.recentPeople.length, 6)
+  }
+
+  // --- intel log: filters PostgREST has to accept -----------------------------
+  // The seed holds five notes: two tagged chop-shop, one attached to nothing.
+  const allNotes = await listNotes(supabase, {})
+  assert(allNotes.ok, allNotes.ok ? "" : allNotes.error)
+  if (seeded) {
+    assert.equal(allNotes.total, 5)
+    assert(allNotes.notes.every((n, i, arr) => i === 0 || arr[i - 1]!.created_at >= n.created_at))
+
+    const tagged = await listNotes(supabase, { tag: "chop-shop" })
+    assert(tagged.ok, tagged.ok ? "" : tagged.error)
+    assert.equal(tagged.total, 2)
+    assert(tagged.notes.every((n) => n.tags.includes("chop-shop")))
+
+    const general = await listNotes(supabase, { attachment: "general" })
+    assert(general.ok, general.ok ? "" : general.error)
+    assert.equal(general.total, 1)
+    assert(
+      general.notes.every((n) => !n.person_id && !n.organization_id && !n.case_id),
+      "general intel is attached to nothing"
+    )
+
+    const attached = await listNotes(supabase, { attachment: "attached" })
+    assert(attached.ok, attached.ok ? "" : attached.error)
+    assert.equal(attached.total, 4)
+
+    const bySource = await listNotes(supabase, { source: "tip" })
+    assert(bySource.ok, bySource.ok ? "" : bySource.error)
+    assert.equal(bySource.total, 1)
+
+    const byConfidence = await listNotes(supabase, { confidence: "high" })
+    assert(byConfidence.ok, byConfidence.ok ? "" : byConfidence.error)
+    assert.equal(byConfidence.total, 2)
+
+    // Two seeded notes mention a Sultan, one capitalised differently: the search
+    // is a case-insensitive substring over the body.
+    const byText = await listNotes(supabase, { q: "sultan" })
+    assert(byText.ok, byText.ok ? "" : byText.error)
+    assert.equal(byText.total, 2)
+    assert(byText.notes.every((n) => n.body.toLowerCase().includes("sultan")))
+
+    const combined = await listNotes(supabase, { tag: "chop-shop", confidence: "high" })
+    assert(combined.ok, combined.ok ? "" : combined.error)
+    assert.equal(combined.total, 1, "filters combine rather than replace each other")
+
+    const nothing = await listNotes(supabase, { tag: "no-such-tag" })
+    assert(nothing.ok, nothing.ok ? "" : nothing.error)
+    assert.equal(nothing.total, 0)
+
+    const counted = await listTags(supabase)
+    assert.equal(counted.find((t) => t.tag === "chop-shop")?.uses, 2)
+
+    // The tag filters on the people and organization lists resolve through notes.
+    const taggedPeople = await idsTaggedWith(supabase, "chop-shop", "person_id")
+    assert.equal(taggedPeople.length, 2)
+    assert(taggedPeople.includes(MIKE))
+    const taggedOrgs = await idsTaggedWith(supabase, "chop-shop", "organization_id")
+    assert.equal(taggedOrgs.length, 2)
+    assert(taggedOrgs.includes(GSF))
+
+    const peopleByTag = await listPeople(supabase, { tag: "chop-shop" })
+    assert(peopleByTag.ok, peopleByTag.ok ? "" : peopleByTag.error)
+    assert.equal(peopleByTag.people.length, 2)
+    const peopleByMissingTag = await listPeople(supabase, { tag: "no-such-tag" })
+    assert(peopleByMissingTag.ok, peopleByMissingTag.ok ? "" : peopleByMissingTag.error)
+    assert.equal(peopleByMissingTag.people.length, 0)
+
+    const orgsByTag = await listOrganizations(supabase, { tag: "recruiting" })
+    assert(orgsByTag.ok, orgsByTag.ok ? "" : orgsByTag.error)
+    assert.equal(orgsByTag.organizations.length, 1)
+  }
+
+  const composerTargets = await listNoteTargets(supabase)
+  if (seeded) {
+    assert.equal(composerTargets.organizations.length, 3)
+    assert.equal(composerTargets.cases.length, 1)
   }
 
   // --- organizations and cases ----------------------------------------------

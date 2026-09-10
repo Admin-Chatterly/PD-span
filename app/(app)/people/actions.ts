@@ -6,7 +6,7 @@ import { z } from "zod"
 import { requireUser } from "@/lib/auth"
 import { firstIssue, optionalText, readFields, uuid } from "@/lib/form"
 import { revalidatePerson } from "@/lib/revalidate"
-import { CONFIDENCES, NOTE_SOURCES, PERSON_STATUSES } from "@/lib/constants"
+import { PERSON_STATUSES } from "@/lib/constants"
 import { searchPeople, type PersonPick } from "@/lib/data/people"
 import { createClient } from "@/lib/supabase/server"
 
@@ -21,17 +21,6 @@ const personSchema = z.object({
   status: z.enum(PERSON_STATUSES).default("unknown"),
 })
 
-function parseTags(value: string | undefined): string[] {
-  if (!value) return []
-  return Array.from(
-    new Set(
-      value
-        .split(/[,\n]/)
-        .map((t) => t.trim().toLowerCase().replace(/^#/, ""))
-        .filter(Boolean)
-    )
-  )
-}
 
 // ---------------------------------------------------------------------------
 // People
@@ -254,70 +243,5 @@ export async function deleteVehicle(vehicleId: string, personId: string | null):
   if (error) return { ok: false, error: error.message }
 
   if (personId) revalidatePerson(personId)
-  return { ok: true }
-}
-
-// ---------------------------------------------------------------------------
-// Notes
-// ---------------------------------------------------------------------------
-
-const noteSchema = z.object({
-  person_id: uuid.optional(),
-  organization_id: uuid.optional(),
-  case_id: uuid.optional(),
-  body: z.string().trim().min(1, "Write the note first.").max(10000),
-  source: z.enum(NOTE_SOURCES).optional(),
-  confidence: z.enum(CONFIDENCES).default("medium"),
-})
-
-export async function addNote(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireUser()
-  const raw = readFields(formData, ["person_id", "organization_id", "case_id", "body", "source", "confidence"])
-  const parsed = noteSchema.safeParse({
-    ...raw,
-    person_id: raw.person_id || undefined,
-    organization_id: raw.organization_id || undefined,
-    case_id: raw.case_id || undefined,
-    source: raw.source && raw.source !== "none" ? raw.source : undefined,
-  })
-  if (!parsed.success) return { error: firstIssue(parsed.error) }
-
-  const supabase = await createClient()
-  const { error } = await supabase.from("notes").insert({
-    person_id: parsed.data.person_id ?? null,
-    organization_id: parsed.data.organization_id ?? null,
-    case_id: parsed.data.case_id ?? null,
-    body: parsed.data.body,
-    tags: parseTags(readFields(formData, ["tags"]).tags),
-    source: parsed.data.source ?? null,
-    confidence: parsed.data.confidence,
-  })
-  if (error) return { error: error.message }
-
-  if (parsed.data.person_id) revalidatePerson(parsed.data.person_id)
-  if (parsed.data.organization_id) revalidatePath(`/organizations/${parsed.data.organization_id}`)
-  if (parsed.data.case_id) revalidatePath(`/cases/${parsed.data.case_id}`)
-  revalidatePath("/")
-  return { ok: true, version: Date.now() }
-}
-
-export async function deleteNote(noteId: string): Promise<ActionResult> {
-  await requireUser()
-  const id = uuid.safeParse(noteId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
-
-  const supabase = await createClient()
-  const { data: note } = await supabase
-    .from("notes")
-    .select("person_id, organization_id, case_id")
-    .eq("id", id.data)
-    .maybeSingle()
-  const { error } = await supabase.from("notes").delete().eq("id", id.data)
-  if (error) return { ok: false, error: error.message }
-
-  if (note?.person_id) revalidatePerson(note.person_id)
-  if (note?.organization_id) revalidatePath(`/organizations/${note.organization_id}`)
-  if (note?.case_id) revalidatePath(`/cases/${note.case_id}`)
-  revalidatePath("/")
   return { ok: true }
 }
