@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { describeSignInError } from "@/lib/auth-errors"
 import { isSupabaseConfigured } from "@/lib/supabase/env"
 import { safeNextPath } from "@/lib/auth"
 
@@ -33,7 +34,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     password: parsed.data.password,
   })
   if (error) {
-    return { error: "Wrong email or password." }
+    return { error: describeSignInError(error) }
   }
 
   redirect(safeNextPath(parsed.data.next))

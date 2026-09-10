@@ -32,6 +32,17 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(url && key)
 }
 
+/** Host of the configured project, for display. Null when unset or unparseable. */
+export function getSupabaseHost(): string | null {
+  const { url } = readEnv()
+  if (!url) return null
+  try {
+    return new URL(url).host
+  } catch {
+    return url
+  }
+}
+
 export function getSupabaseEnv() {
   const { url, key } = readEnv()
   if (!url || !key) {
