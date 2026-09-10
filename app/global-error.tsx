@@ -41,7 +41,7 @@ export default function GlobalError({
               color: "#a1a1aa",
             }}
           >
-            {error.message}
+            {process.env.NODE_ENV === "production" ? "The server reported an error." : error.message}
             {error.digest ? `\n\nReference: ${error.digest}` : ""}
           </pre>
           <button

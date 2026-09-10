@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import { CameraIcon, LoaderCircleIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 import { removePersonPhoto, setPersonPhoto } from "@/app/(app)/people/actions"
+import { ImageDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,19 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { STORAGE_BUCKET } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
-
-const MAX_BYTES = 10 * 1024 * 1024
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-
-function extensionFor(file: File): string {
-  const fromName = file.name.includes(".") ? file.name.split(".").pop() : null
-  if (fromName && /^[a-z0-9]{1,5}$/i.test(fromName)) return fromName.toLowerCase()
-  return file.type === "image/jpeg" ? "jpg" : file.type.replace("image/", "") || "bin"
-}
+import { extensionFor } from "@/lib/upload"
 
 /** Uploads a mugshot straight to Storage, then points the record at it. */
 export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto: boolean }) {
@@ -39,15 +30,7 @@ export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto
   async function upload() {
     setError(null)
     if (!file) {
-      setError("Choose an image first.")
-      return
-    }
-    if (!ACCEPTED.includes(file.type)) {
-      setError("That file type is not accepted. Use JPEG, PNG, WebP or GIF.")
-      return
-    }
-    if (file.size > MAX_BYTES) {
-      setError(`That file is ${(file.size / 1024 / 1024).toFixed(1)} MB. The limit is 10 MB.`)
+      setError("Paste, drop or choose an image first.")
       return
     }
 
@@ -104,29 +87,12 @@ export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto
         <DialogHeader>
           <DialogTitle>{hasPhoto ? "Change the photo" : "Add a photo"}</DialogTitle>
           <DialogDescription>
-            Up to 10 MB. It goes into the private bucket and is only ever served through a
-            short-lived signed link.
+            Paste a screenshot with win+shift+S, or drop a file. It goes into the private bucket
+            and is only ever served through a short-lived signed link.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="person_photo">Image</Label>
-          <Input
-            id="person_photo"
-            type="file"
-            accept={ACCEPTED.join(",")}
-            disabled={busy}
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null)
-              setError(null)
-            }}
-          />
-          {file ? (
-            <p className="text-xs text-muted-foreground">
-              {file.name} · {(file.size / 1024).toFixed(0)} KB
-            </p>
-          ) : null}
-        </div>
+        <ImageDropzone file={file} onFile={setFile} onError={setError} disabled={busy} />
 
         {error ? (
           <p role="alert" className="text-sm text-destructive">

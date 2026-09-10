@@ -37,7 +37,10 @@ export default function AppError({
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <pre className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs text-muted-foreground">
-            {error.message}
+            {/* A server error can carry raw database text, which is of no use to
+                an officer and needlessly detailed. The digest is what identifies
+                it in the logs; the message itself is kept for development. */}
+            {process.env.NODE_ENV === "production" ? "The server reported an error." : error.message}
             {error.digest ? `\n\nReference: ${error.digest}` : ""}
           </pre>
           <div className="flex gap-2">

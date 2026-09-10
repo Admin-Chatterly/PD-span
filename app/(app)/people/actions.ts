@@ -9,6 +9,7 @@ import { revalidatePerson } from "@/lib/revalidate"
 import { PERSON_STATUSES, STORAGE_BUCKET } from "@/lib/constants"
 import { searchPeople, type PersonPick } from "@/lib/data/people"
 import { createClient } from "@/lib/supabase/server"
+import { isSafeStoragePath } from "@/lib/upload"
 
 import type { ActionResult, FormState } from "@/lib/action-types"
 
@@ -106,7 +107,10 @@ export async function updatePersonStatus(personId: string, status: string): Prom
 export async function setPersonPhoto(personId: string, storagePath: string): Promise<ActionResult> {
   await requireUser()
   const parsed = z
-    .object({ id: uuid, path: z.string().trim().min(1).max(500) })
+    .object({
+      id: uuid,
+      path: z.string().trim().min(1).max(500).refine(isSafeStoragePath),
+    })
     .safeParse({ id: personId, path: storagePath })
   if (!parsed.success) return { ok: false, error: "Invalid photo." }
 

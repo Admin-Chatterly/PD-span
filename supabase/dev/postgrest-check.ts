@@ -17,7 +17,9 @@ import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 import { getDashboardData } from "@/lib/data/dashboard"
 import { getBoardGraph, listBoardScopes } from "@/lib/data/board"
+import { isUuid } from "@/lib/data/filters"
 import { groupHits, searchHitHref } from "@/lib/search"
+import { isSafeStoragePath } from "@/lib/upload"
 import { getCaseDetail, listCases } from "@/lib/data/cases"
 import { getOrganizationDetail, listOrganizations } from "@/lib/data/organizations"
 import {
@@ -88,6 +90,30 @@ async function main() {
     userId = signIn.data.user.id
     console.log(`live mode against ${LIVE_URL} as ${signIn.data.user.email}`)
   }
+
+  // --- guards on values that come in from the URL and the browser ------------
+  // A string of the right length is not a uuid; letting one through reaches the
+  // database and throws instead of rendering a not-found page.
+  assert(isUuid(MIKE))
+  assert(isUuid(MIKE.toUpperCase()))
+  assert(!isUuid("-".repeat(36)), "36 hyphens are not a uuid")
+  assert(!isUuid("b0000000-0000-4000-8000-00000000000"), "too short")
+  assert(!isUuid("b0000000-0000-4000-8000-000000000001x"), "trailing character")
+  assert(!isUuid("g0000000-0000-4000-8000-000000000001"), "not hexadecimal")
+  assert(!isUuid(""))
+
+  // The browser reports where it put an upload, so only the shapes this app
+  // writes are accepted.
+  assert(isSafeStoragePath(`people/${MIKE}/${MIKE}.png`))
+  assert(isSafeStoragePath(`people/${MIKE}/photo/${MIKE}.jpg`))
+  assert(isSafeStoragePath(`organizations/${GSF}/${GSF}.webp`))
+  assert(isSafeStoragePath(`unfiled/${MIKE}.gif`))
+  assert(!isSafeStoragePath("../../etc/passwd"), "traversal")
+  assert(!isSafeStoragePath(`people/../${MIKE}.png`), "traversal mid-path")
+  assert(!isSafeStoragePath(`/people/${MIKE}/x.png`), "absolute")
+  assert(!isSafeStoragePath(`people//${MIKE}.png`), "empty segment")
+  assert(!isSafeStoragePath(`secrets/${MIKE}.png`), "unknown prefix")
+  assert(!isSafeStoragePath(`people/${MIKE}/x`), "no extension")
 
   // --- list -----------------------------------------------------------------
   const all = await listPeople(supabase, {})

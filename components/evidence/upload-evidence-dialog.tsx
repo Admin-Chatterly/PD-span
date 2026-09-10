@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { LoaderCircleIcon, UploadIcon } from "lucide-react"
 import { toast } from "sonner"
 import { addEvidenceFile } from "@/app/(app)/evidence/actions"
+import { ImageDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,16 +21,7 @@ import type { FormState } from "@/lib/action-types"
 import { STORAGE_BUCKET } from "@/lib/constants"
 import type { EvidenceTarget } from "@/lib/data/evidence"
 import { createClient } from "@/lib/supabase/client"
-
-/** Mirrors the bucket's own limits, so a rejection is explained before uploading. */
-const MAX_BYTES = 10 * 1024 * 1024
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-
-function extensionFor(file: File): string {
-  const fromName = file.name.includes(".") ? file.name.split(".").pop() : null
-  if (fromName && /^[a-z0-9]{1,5}$/i.test(fromName)) return fromName.toLowerCase()
-  return file.type === "image/jpeg" ? "jpg" : file.type.replace("image/", "") || "bin"
-}
+import { extensionFor } from "@/lib/upload"
 
 function targetFolder(target: EvidenceTarget): string {
   if (target.personId) return `people/${target.personId}`
@@ -52,11 +44,12 @@ export function UploadEvidenceDialog({ target }: { target: EvidenceTarget }) {
         <DialogHeader>
           <DialogTitle>Upload evidence</DialogTitle>
           <DialogDescription>
-            A screenshot or photo, up to 10 MB. It goes into the private bucket and is only ever
-            served through a short-lived signed link.
+            Take a screenshot with win+shift+S and paste it straight in. It goes into the private
+            bucket and is only ever served through a short-lived signed link.
           </DialogDescription>
         </DialogHeader>
-        <UploadForm target={target} onSaved={() => setOpen(false)} />
+        {/* Remounting clears the previous selection when the dialog reopens. */}
+        {open ? <UploadForm target={target} onSaved={() => setOpen(false)} /> : null}
       </DialogContent>
     </Dialog>
   )
@@ -87,15 +80,7 @@ function UploadForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () =
     setError(null)
 
     if (!file) {
-      setError("Choose an image first.")
-      return
-    }
-    if (!ACCEPTED.includes(file.type)) {
-      setError("That file type is not accepted. Use JPEG, PNG, WebP or GIF.")
-      return
-    }
-    if (file.size > MAX_BYTES) {
-      setError(`That file is ${(file.size / 1024 / 1024).toFixed(1)} MB. The limit is 10 MB.`)
+      setError("Paste, drop or choose an image first.")
       return
     }
 
@@ -131,24 +116,7 @@ function UploadForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () =
       {target.caseId ? <input type="hidden" name="case_id" value={target.caseId} /> : null}
       <input type="hidden" name="storage_path" value={storagePath} />
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="evidence_file">Image</Label>
-        <Input
-          id="evidence_file"
-          type="file"
-          accept={ACCEPTED.join(",")}
-          onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null)
-            setError(null)
-          }}
-          disabled={pending}
-        />
-        {file ? (
-          <p className="text-xs text-muted-foreground">
-            {file.name} · {(file.size / 1024).toFixed(0)} KB
-          </p>
-        ) : null}
-      </div>
+      <ImageDropzone file={file} onFile={setFile} onError={setError} disabled={pending} />
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="upload_caption">Caption</Label>

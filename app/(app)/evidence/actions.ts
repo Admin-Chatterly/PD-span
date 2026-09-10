@@ -6,6 +6,7 @@ import type { ActionResult, FormState } from "@/lib/action-types"
 import { requireUser } from "@/lib/auth"
 import { STORAGE_BUCKET } from "@/lib/constants"
 import { firstIssue, optionalText, readFields, uuid } from "@/lib/form"
+import { isSafeStoragePath } from "@/lib/upload"
 import { revalidateCase, revalidateOrganization, revalidatePerson } from "@/lib/revalidate"
 import { createClient } from "@/lib/supabase/server"
 
@@ -28,7 +29,12 @@ const linkSchema = z.object({
 /** Written by the browser upload; the file is already in the bucket by then. */
 const fileSchema = z.object({
   ...targets,
-  storage_path: z.string().trim().min(1).max(500),
+  storage_path: z
+    .string()
+    .trim()
+    .min(1)
+    .max(500)
+    .refine(isSafeStoragePath, "That upload path is not one this app writes."),
   caption: optionalText,
 })
 
