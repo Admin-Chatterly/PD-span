@@ -4,22 +4,16 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { requireUser } from "@/lib/auth"
-import { CONFIDENCES, NOTE_SOURCES, PERSON_STATUSES } from "@/lib/constants"
+import { firstIssue, optionalText, readFields, uuid } from "@/lib/form"
+import { revalidatePerson } from "@/lib/revalidate"
+import { PERSON_STATUSES, STORAGE_BUCKET } from "@/lib/constants"
 import { searchPeople, type PersonPick } from "@/lib/data/people"
 import { createClient } from "@/lib/supabase/server"
+import { isSafeStoragePath } from "@/lib/upload"
 
 import type { ActionResult, FormState } from "@/lib/action-types"
 
 export type { ActionResult, FormState }
-
-const uuid = z.uuid()
-
-const optionalText = z
-  .string()
-  .trim()
-  .max(4000)
-  .optional()
-  .transform((v) => (v ? v : null))
 
 const personSchema = z.object({
   name: optionalText,
@@ -28,37 +22,6 @@ const personSchema = z.object({
   status: z.enum(PERSON_STATUSES).default("unknown"),
 })
 
-function read(formData: FormData, keys: readonly string[]) {
-  const out: Record<string, string | undefined> = {}
-  for (const key of keys) {
-    const value = formData.get(key)
-    out[key] = typeof value === "string" ? value : undefined
-  }
-  return out
-}
-
-function firstIssue(error: z.ZodError): string {
-  const issue = error.issues[0]
-  return issue ? `${issue.path.join(".") || "form"}: ${issue.message}` : "Invalid input."
-}
-
-function parseTags(value: string | undefined): string[] {
-  if (!value) return []
-  return Array.from(
-    new Set(
-      value
-        .split(/[,\n]/)
-        .map((t) => t.trim().toLowerCase().replace(/^#/, ""))
-        .filter(Boolean)
-    )
-  )
-}
-
-function revalidatePerson(id: string) {
-  revalidatePath(`/people/${id}`)
-  revalidatePath("/people")
-  revalidatePath("/")
-}
 
 // ---------------------------------------------------------------------------
 // People
@@ -66,7 +29,7 @@ function revalidatePerson(id: string) {
 
 export async function createPerson(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
-  const parsed = personSchema.safeParse(read(formData, ["name", "alias", "description", "status"]))
+  const parsed = personSchema.safeParse(readFields(formData, ["name", "alias", "description", "status"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   const { name, alias, description } = parsed.data
   if (!name && !alias && !description) {
@@ -105,7 +68,7 @@ export async function updatePerson(_prev: FormState, formData: FormData): Promis
   await requireUser()
   const id = uuid.safeParse(formData.get("id"))
   if (!id.success) return { error: "Missing person id." }
-  const parsed = personSchema.safeParse(read(formData, ["name", "alias", "description", "status"]))
+  const parsed = personSchema.safeParse(readFields(formData, ["name", "alias", "description", "status"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   const { name, alias, description } = parsed.data
   if (!name && !alias && !description) {
@@ -133,6 +96,67 @@ export async function updatePersonStatus(personId: string, status: string): Prom
   if (error) return { ok: false, error: error.message }
 
   revalidatePerson(parsed.data.id)
+  return { ok: true }
+}
+
+/**
+ * The photo is already in the bucket by the time this runs: the browser uploads
+ * it directly, the same way evidence does. The previous file is removed, so a
+ * replaced mugshot does not linger.
+ */
+export async function setPersonPhoto(personId: string, storagePath: string): Promise<ActionResult> {
+  await requireUser()
+  const parsed = z
+    .object({
+      id: uuid,
+      path: z.string().trim().min(1).max(500).refine(isSafeStoragePath),
+    })
+    .safeParse({ id: personId, path: storagePath })
+  if (!parsed.success) return { ok: false, error: "Invalid photo." }
+
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from("people")
+    .select("photo_path")
+    .eq("id", parsed.data.id)
+    .maybeSingle()
+
+  const { error } = await supabase
+    .from("people")
+    .update({ photo_path: parsed.data.path })
+    .eq("id", parsed.data.id)
+  if (error) {
+    // Without the row pointing at it the file is unreachable, so it goes too.
+    await supabase.storage.from(STORAGE_BUCKET).remove([parsed.data.path])
+    return { ok: false, error: error.message }
+  }
+
+  if (existing?.photo_path && existing.photo_path !== parsed.data.path) {
+    await supabase.storage.from(STORAGE_BUCKET).remove([existing.photo_path])
+  }
+  revalidatePerson(parsed.data.id)
+  return { ok: true }
+}
+
+export async function removePersonPhoto(personId: string): Promise<ActionResult> {
+  await requireUser()
+  const id = uuid.safeParse(personId)
+  if (!id.success) return { ok: false, error: "Invalid id." }
+
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from("people")
+    .select("photo_path")
+    .eq("id", id.data)
+    .maybeSingle()
+
+  const { error } = await supabase.from("people").update({ photo_path: null }).eq("id", id.data)
+  if (error) return { ok: false, error: error.message }
+
+  if (existing?.photo_path) {
+    await supabase.storage.from(STORAGE_BUCKET).remove([existing.photo_path])
+  }
+  revalidatePerson(id.data)
   return { ok: true }
 }
 
@@ -176,74 +200,6 @@ export async function searchPeopleAction(term: string, excludeIds: string[] = []
 }
 
 // ---------------------------------------------------------------------------
-// Memberships
-// ---------------------------------------------------------------------------
-
-const membershipSchema = z.object({
-  person_id: uuid,
-  organization_id: uuid,
-  role: optionalText,
-  is_confirmed: z.boolean(),
-})
-
-export async function addMembership(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireUser()
-  const raw = read(formData, ["person_id", "organization_id", "role"])
-  const parsed = membershipSchema.safeParse({ ...raw, is_confirmed: formData.get("is_confirmed") === "on" })
-  if (!parsed.success) return { error: "Pick an organization." }
-
-  const supabase = await createClient()
-  const { error } = await supabase.from("memberships").insert(parsed.data)
-  if (error) {
-    return { error: error.code === "23505" ? "Already listed in that organization." : error.message }
-  }
-
-  revalidatePerson(parsed.data.person_id)
-  revalidatePath(`/organizations/${parsed.data.organization_id}`)
-  return { ok: true, version: Date.now() }
-}
-
-export async function setMembershipConfirmed(
-  personId: string,
-  organizationId: string,
-  isConfirmed: boolean
-): Promise<ActionResult> {
-  await requireUser()
-  const parsed = z.object({ p: uuid, o: uuid }).safeParse({ p: personId, o: organizationId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
-
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("memberships")
-    .update({ is_confirmed: isConfirmed })
-    .eq("person_id", parsed.data.p)
-    .eq("organization_id", parsed.data.o)
-  if (error) return { ok: false, error: error.message }
-
-  revalidatePerson(parsed.data.p)
-  revalidatePath(`/organizations/${parsed.data.o}`)
-  return { ok: true }
-}
-
-export async function removeMembership(personId: string, organizationId: string): Promise<ActionResult> {
-  await requireUser()
-  const parsed = z.object({ p: uuid, o: uuid }).safeParse({ p: personId, o: organizationId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
-
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("memberships")
-    .delete()
-    .eq("person_id", parsed.data.p)
-    .eq("organization_id", parsed.data.o)
-  if (error) return { ok: false, error: error.message }
-
-  revalidatePerson(parsed.data.p)
-  revalidatePath(`/organizations/${parsed.data.o}`)
-  return { ok: true }
-}
-
-// ---------------------------------------------------------------------------
 // Associates
 // ---------------------------------------------------------------------------
 
@@ -257,7 +213,7 @@ export async function addAssociate(_prev: FormState, formData: FormData): Promis
       is_confirmed: z.boolean(),
     })
     .safeParse({
-      ...read(formData, ["person_id", "associate_id", "relationship"]),
+      ...readFields(formData, ["person_id", "associate_id", "relationship"]),
       is_confirmed: formData.get("is_confirmed") === "on",
     })
   if (!parsed.success) return { error: "Pick a person to link." }
@@ -309,7 +265,7 @@ export async function addVehicle(_prev: FormState, formData: FormData): Promise<
       color: optionalText,
       notes: optionalText,
     })
-    .safeParse(read(formData, ["person_id", "plate", "model", "color", "notes"]))
+    .safeParse(readFields(formData, ["person_id", "plate", "model", "color", "notes"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   if (!parsed.data.plate && !parsed.data.model) {
     return { error: "Give at least a plate or a model." }
@@ -349,70 +305,5 @@ export async function deleteVehicle(vehicleId: string, personId: string | null):
   if (error) return { ok: false, error: error.message }
 
   if (personId) revalidatePerson(personId)
-  return { ok: true }
-}
-
-// ---------------------------------------------------------------------------
-// Notes
-// ---------------------------------------------------------------------------
-
-const noteSchema = z.object({
-  person_id: uuid.optional(),
-  organization_id: uuid.optional(),
-  case_id: uuid.optional(),
-  body: z.string().trim().min(1, "Write the note first.").max(10000),
-  source: z.enum(NOTE_SOURCES).optional(),
-  confidence: z.enum(CONFIDENCES).default("medium"),
-})
-
-export async function addNote(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireUser()
-  const raw = read(formData, ["person_id", "organization_id", "case_id", "body", "source", "confidence"])
-  const parsed = noteSchema.safeParse({
-    ...raw,
-    person_id: raw.person_id || undefined,
-    organization_id: raw.organization_id || undefined,
-    case_id: raw.case_id || undefined,
-    source: raw.source && raw.source !== "none" ? raw.source : undefined,
-  })
-  if (!parsed.success) return { error: firstIssue(parsed.error) }
-
-  const supabase = await createClient()
-  const { error } = await supabase.from("notes").insert({
-    person_id: parsed.data.person_id ?? null,
-    organization_id: parsed.data.organization_id ?? null,
-    case_id: parsed.data.case_id ?? null,
-    body: parsed.data.body,
-    tags: parseTags(read(formData, ["tags"]).tags),
-    source: parsed.data.source ?? null,
-    confidence: parsed.data.confidence,
-  })
-  if (error) return { error: error.message }
-
-  if (parsed.data.person_id) revalidatePerson(parsed.data.person_id)
-  if (parsed.data.organization_id) revalidatePath(`/organizations/${parsed.data.organization_id}`)
-  if (parsed.data.case_id) revalidatePath(`/cases/${parsed.data.case_id}`)
-  revalidatePath("/")
-  return { ok: true, version: Date.now() }
-}
-
-export async function deleteNote(noteId: string): Promise<ActionResult> {
-  await requireUser()
-  const id = uuid.safeParse(noteId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
-
-  const supabase = await createClient()
-  const { data: note } = await supabase
-    .from("notes")
-    .select("person_id, organization_id, case_id")
-    .eq("id", id.data)
-    .maybeSingle()
-  const { error } = await supabase.from("notes").delete().eq("id", id.data)
-  if (error) return { ok: false, error: error.message }
-
-  if (note?.person_id) revalidatePerson(note.person_id)
-  if (note?.organization_id) revalidatePath(`/organizations/${note.organization_id}`)
-  if (note?.case_id) revalidatePath(`/cases/${note.case_id}`)
-  revalidatePath("/")
   return { ok: true }
 }

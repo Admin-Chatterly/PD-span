@@ -4,6 +4,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LogOutIcon, ShieldIcon } from "lucide-react"
 import { signOut } from "@/app/login/actions"
+import { LogIntelButton } from "@/components/notes/log-intel-button"
+import { GlobalSearch } from "@/components/search/global-search"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -11,6 +13,7 @@ const NAV = [
   { href: "/", label: "Dashboard" },
   { href: "/people", label: "People" },
   { href: "/organizations", label: "Organizations" },
+  { href: "/intel", label: "Intel" },
   { href: "/cases", label: "Cases" },
   { href: "/board", label: "Board" },
 ] as const
@@ -45,7 +48,9 @@ export function SiteHeader({ callsign }: { callsign: string }) {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <span className="hidden text-sm text-muted-foreground sm:inline">{callsign}</span>
+          <GlobalSearch />
+          <LogIntelButton />
+          <span className="hidden text-sm text-muted-foreground lg:inline">{callsign}</span>
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="sm" title="Sign out">
               <LogOutIcon />

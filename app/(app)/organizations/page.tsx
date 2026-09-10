@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { ActiveTagFilter } from "@/components/active-tag-filter"
 import { OrganizationStatusBadge, OrganizationTypeBadge } from "@/components/badges"
 import { NewOrganizationDialog } from "@/components/organizations/new-organization-dialog"
 import { RelativeTime } from "@/components/relative-time"
@@ -16,9 +17,16 @@ import { createClient } from "@/lib/supabase/server"
 
 export const metadata = { title: "Organizations" }
 
-export default async function OrganizationsPage() {
+function first(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "")
+}
+
+export default async function OrganizationsPage(props: PageProps<"/organizations">) {
+  const searchParams = await props.searchParams
+  const tag = first(searchParams.tag).toLowerCase()
+
   const supabase = await createClient()
-  const result = await listOrganizations(supabase)
+  const result = await listOrganizations(supabase, { tag: tag || undefined })
 
   return (
     <div className="flex flex-col gap-5">
@@ -26,18 +34,23 @@ export default async function OrganizationsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Organizations</h1>
           {result.ok ? (
-            <p className="text-sm text-muted-foreground">{result.organizations.length} on file</p>
+            <p className="text-sm text-muted-foreground">
+              {result.organizations.length} {tag ? "tagged" : "on file"}
+            </p>
           ) : null}
         </div>
         <NewOrganizationDialog />
       </div>
 
+      {tag ? <ActiveTagFilter tag={tag} clearHref="/organizations" /> : null}
+
       {!result.ok ? (
         <SetupHelp error={result.error} />
       ) : result.organizations.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
-          No organizations yet. Create the gangs and crews your department tracks, then add members
-          from a person&rsquo;s page.
+          {tag
+            ? "No organization has intel with that tag."
+            : "No organizations yet. Create the gangs and crews your department tracks, then add members from either side."}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">

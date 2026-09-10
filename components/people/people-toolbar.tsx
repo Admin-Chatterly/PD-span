@@ -21,20 +21,22 @@ const SORT_LABELS: Record<string, string> = {
   last_note: "Latest note",
 }
 
-type Props = { q: string; status: string; sort: string }
+type Props = { q: string; status: string; sort: string; tag: string }
 
-export function PeopleToolbar({ q, status, sort }: Props) {
+export function PeopleToolbar({ q, status, sort, tag }: Props) {
   const router = useRouter()
   const [term, setTerm] = useState(q)
   const [pending, startTransition] = useTransition()
   const timer = useRef<number | undefined>(undefined)
 
   function navigate(next: Partial<Props>) {
-    const values = { q: term, status, sort, ...next }
+    const values = { q: term, status, sort, tag, ...next }
     const params = new URLSearchParams()
     if (values.q.trim()) params.set("q", values.q.trim())
     if (values.status) params.set("status", values.status)
     if (values.sort && values.sort !== "updated") params.set("sort", values.sort)
+    // Set from a tag badge elsewhere in the app; keep it across every other change.
+    if (values.tag) params.set("tag", values.tag)
     const qs = params.toString()
     startTransition(() => router.replace(qs ? `/people?${qs}` : "/people"))
   }

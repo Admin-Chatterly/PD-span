@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { PlusIcon } from "lucide-react"
+import { ActiveTagFilter } from "@/components/active-tag-filter"
 import { PeopleTable } from "@/components/people/people-table"
 import { PeopleToolbar } from "@/components/people/people-toolbar"
 import { QuickAddForm } from "@/components/people/quick-add-form"
@@ -25,8 +26,16 @@ export default async function PeoplePage(props: PageProps<"/people">) {
     ? (sortParam as PeopleSort)
     : "updated"
 
+  const tag = first(searchParams.tag).toLowerCase()
+
   const supabase = await createClient()
-  const result = await listPeople(supabase, { q, status: status || undefined, sort })
+  const result = await listPeople(supabase, {
+    q,
+    status: status || undefined,
+    sort,
+    tag: tag || undefined,
+  })
+  const filtered = Boolean(q || status || tag)
 
   return (
     <div className="flex flex-col gap-5">
@@ -35,7 +44,7 @@ export default async function PeoplePage(props: PageProps<"/people">) {
           <h1 className="text-2xl font-semibold tracking-tight">People</h1>
           {result.ok ? (
             <p className="text-sm text-muted-foreground">
-              {result.total} on file{q || status ? ", filtered" : ""}
+              {result.total} on file{filtered ? ", filtered" : ""}
             </p>
           ) : null}
         </div>
@@ -47,10 +56,11 @@ export default async function PeoplePage(props: PageProps<"/people">) {
       </div>
 
       <QuickAddForm />
-      <PeopleToolbar q={q} status={status} sort={sort} />
+      <PeopleToolbar q={q} status={status} sort={sort} tag={tag} />
+      {tag ? <ActiveTagFilter tag={tag} clearHref="/people" /> : null}
 
       {result.ok ? (
-        <PeopleTable people={result.people} filtered={Boolean(q || status)} />
+        <PeopleTable people={result.people} filtered={filtered} />
       ) : (
         <SetupHelp error={result.error} />
       )}

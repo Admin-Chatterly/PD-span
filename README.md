@@ -72,12 +72,25 @@ schemas), every migration, the seed, and the assertions in
 `supabase/dev/checks.sql`. It drops the public schema first, so never point it
 at a real project.
 
-With a PostgREST binary on your PATH, `pnpm db:check:postgrest` goes one step
-further and runs the app's data layer and the query shapes its Server Actions
-use through a real PostgREST on that database. The same script runs against
-the live project when `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-`E2E_EMAIL` and `E2E_PASSWORD` are set: `pnpm exec tsx supabase/dev/postgrest-check.ts`.
-It cleans up everything it creates.
+`pnpm db:check:postgrest` goes one step further and runs the app's own data
+layer, and the query shapes its Server Actions use, through a real PostgREST on
+that database. This is the check that catches what TypeScript cannot: embedded
+selects, foreign-key hints, `or()` and `contains()` filters, RPC argument names
+and error codes.
+
+```
+POSTGREST_BIN=/path/to/postgrest \
+DATABASE_URL=postgresql://postgres@127.0.0.1:5432/pdspan_check \
+pnpm db:check:postgrest
+```
+
+The binary is a single static file from the
+[PostgREST releases](https://github.com/PostgREST/postgrest/releases); the Linux
+asset is named `postgrest-<version>-linux-static-x86-64.tar.xz`. The same script
+runs against the live project when `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `E2E_EMAIL` and `E2E_PASSWORD` are set:
+`pnpm exec tsx supabase/dev/postgrest-check.ts`. It cleans up everything it
+creates.
 
 `lib/database.types.ts` is written by hand to match the migration. Once you
 have a database URL you can regenerate it:
@@ -87,15 +100,34 @@ have a database URL you can regenerate it:
 
 | Table | What it is |
 | --- | --- |
-| `people` | Suspects and persons of interest. Every field except `id` is optional; a row can be only a description. `status` is one of the values in `lib/constants.ts`. |
+| `people` | Suspects and persons of interest. Every field except `id` is optional; a row can be only a description. `status` is one of the values in `lib/constants.ts`. A photo, when there is one, lives in the private bucket like evidence. |
 | `organizations` | Gangs, crews, cartels, businesses. |
-| `memberships` | People ↔ organizations, with a role and a confirmed/suspected flag. |
+| `memberships` | People ↔ organizations, with a role and a confirmed/suspected flag. Managed from either side. |
 | `associates` | Person ↔ person links, undirected, one row per pair. |
-| `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing. Tags, source, confidence, and the author (from the session). |
+| `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing at all, which is how a tip gets recorded before anyone knows who it is about. Tags, source, confidence, and the author (from the session). Browse and filter them all at `/intel`. |
 | `vehicles` | Plates and models, optionally tied to a person. Plates are stored upper-case. |
-| `cases` / `case_links` | An investigation and the people/organizations in it. |
-| `evidence` | Links (Medal.tv clips, YouTube, Streamable, image URLs) or, later, uploads in the private `intel` bucket, attached to a person, organization or case. Clip links play inline. |
+| `cases` / `case_links` | An investigation and the people and organizations in it, each with a role in that case. A link points at exactly one of the two, which the database enforces. |
+| `evidence` | Either an uploaded image in the private `intel` bucket or an external link (Medal.tv clips, YouTube, Streamable, image URLs), attached to a person, organization or case. Clip links play inline; uploads render through short-lived signed URLs and never become public. |
 | `profiles` | One row per login, holding the officer's callsign. |
+
+Deleting an organization keeps the intel: notes are detached rather than
+deleted, and members keep their own records. Memberships, case links and
+evidence attached to the organization go with it.
+
+Tags live only on notes, so every tag filter in the app resolves through them:
+`/intel?tag=x` for the intel itself, `/people?tag=x` and `/organizations?tag=x`
+for everyone with a note carrying that tag.
+
+Ctrl+K (or cmd+K) opens one search across people, aliases, descriptions,
+plates, territories, note bodies and tags, grouped by kind. Results that have no
+page of their own, a vehicle or a note, open the record they belong to.
+
+`/board` draws the corkboard: people and organizations as nodes, memberships
+and associate links as edges, laid out by a force simulation and clickable
+through to each record. A graph of the whole server is unreadable, so the board
+is scoped to one case or one organization by default, with everyone on file
+available deliberately. Edges are only drawn between nodes that are on the
+board, so a link never points at something off screen.
 
 Views `people_overview`, `organizations_overview`, `cases_overview` back the
 list pages. Functions: `search_all(term)` for global search, `merge_people(keep,
@@ -107,6 +139,8 @@ filter.
 
 Every table has Row Level Security enabled. Only signed-in users (the
 `authenticated` role) can read or write; the anon key sees nothing. The storage
-bucket is private and files are served through short-lived signed URLs. The
+bucket is private: uploads go straight from the browser to Storage, so a large
+image never passes through the server, and they are only ever read back through
+signed URLs minted per request. The
 site's proxy redirects anonymous visitors to `/login`, and every Server Action
 checks the session again.

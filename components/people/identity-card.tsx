@@ -4,6 +4,7 @@ import { useState } from "react"
 import { PencilIcon } from "lucide-react"
 import { UnknownBadge } from "@/components/badges"
 import { PersonForm } from "@/components/people/person-form"
+import { PhotoDialog } from "@/components/people/photo-dialog"
 import { StatusSelect } from "@/components/people/status-select"
 import { RelativeTime } from "@/components/relative-time"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,7 @@ type Person = {
   alias: string | null
   description: string | null
   status: string
+  photo_path: string | null
   created_at: string
   updated_at: string
 }
@@ -29,7 +31,15 @@ function initials(label: string): string {
     .join("")
 }
 
-export function IdentityCard({ person, createdBy }: { person: Person; createdBy: string | null }) {
+export function IdentityCard({
+  person,
+  createdBy,
+  photoUrl,
+}: {
+  person: Person
+  createdBy: string | null
+  photoUrl: string | null
+}) {
   const [editing, setEditing] = useState(false)
   const label = personLabel(person)
 
@@ -45,9 +55,20 @@ export function IdentityCard({ person, createdBy }: { person: Person; createdBy:
           />
         ) : (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-muted text-xl font-semibold text-muted-foreground">
-              {initials(label)}
-            </div>
+            {photoUrl ? (
+              // A signed URL from the private bucket; next/image would need an
+              // allowlist it cannot have for a host that rotates its token.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={photoUrl}
+                alt={`Photo of ${label}`}
+                className="size-16 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-muted text-xl font-semibold text-muted-foreground">
+                {initials(label)}
+              </div>
+            )}
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-semibold tracking-tight">{label}</h1>
@@ -71,6 +92,7 @@ export function IdentityCard({ person, createdBy }: { person: Person; createdBy:
               <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                 <PencilIcon /> Edit identity
               </Button>
+              <PhotoDialog personId={person.id} hasPhoto={Boolean(person.photo_path)} />
             </div>
           </div>
         )}

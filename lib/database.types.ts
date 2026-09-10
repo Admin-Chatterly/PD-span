@@ -586,6 +586,9 @@ export type Database = {
           subtitle: string | null
           status: string | null
           score: number
+          /** The record this result belongs to, for results with no page of their own. */
+          parent_kind: string | null
+          parent_id: string | null
         }[]
       }
     }

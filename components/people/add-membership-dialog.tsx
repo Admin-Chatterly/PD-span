@@ -3,7 +3,8 @@
 import { useActionState, useEffect, useId, useState } from "react"
 import { LoaderCircleIcon, PlusIcon } from "lucide-react"
 import { toast } from "sonner"
-import { addMembership, type FormState } from "@/app/(app)/people/actions"
+import { addMembership } from "@/app/(app)/memberships/actions"
+import type { FormState } from "@/lib/action-types"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {

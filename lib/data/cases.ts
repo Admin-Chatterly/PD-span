@@ -1,6 +1,6 @@
 import { cache } from "react"
 import type { Tables, Views } from "@/lib/database.types"
-import { EVIDENCE_SELECT, type EvidenceRow } from "@/lib/data/evidence"
+import { EVIDENCE_SELECT, signEvidence, type EvidenceRow } from "@/lib/data/evidence"
 import { NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
 import type { Client } from "@/lib/supabase/types"
 
@@ -59,6 +59,8 @@ export type CaseDetail = {
   organizations: CaseLinkedRow[]
   notes: NoteRow[]
   evidence: EvidenceRow[]
+  /** Everything on file, so the link dialog can offer what is not linked yet. */
+  organizationOptions: { id: string; name: string }[]
   createdBy: string | null
 }
 
@@ -73,7 +75,7 @@ export const getCaseDetail = cache(async (supabase: Client, id: string): Promise
   if (caseError) throw new Error(caseError.message)
   if (!caseRecord) return null
 
-  const [links, notes, evidence, creator] = await Promise.all([
+  const [links, notes, evidence, organizationOptions, creator] = await Promise.all([
     supabase
       .from("case_links")
       .select(
@@ -83,12 +85,13 @@ export const getCaseDetail = cache(async (supabase: Client, id: string): Promise
       .order("created_at", { ascending: true }),
     supabase.from("notes").select(NOTE_SELECT).eq("case_id", id).order("created_at", { ascending: false }),
     supabase.from("evidence").select(EVIDENCE_SELECT).eq("case_id", id).order("created_at", { ascending: false }),
+    supabase.from("organizations").select("id, name").order("name").limit(500),
     caseRecord.created_by
       ? supabase.from("profiles").select("callsign").eq("id", caseRecord.created_by).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ])
 
-  const failure = [links, notes, evidence].find((r) => r.error)
+  const failure = [links, notes, evidence, organizationOptions].find((r) => r.error)
   if (failure?.error) throw new Error(failure.error.message)
 
   const rows = (links.data ?? []) as unknown as CaseLinkedRow[]
@@ -97,7 +100,8 @@ export const getCaseDetail = cache(async (supabase: Client, id: string): Promise
     people: rows.filter((r) => r.person),
     organizations: rows.filter((r) => r.organization),
     notes: (notes.data ?? []) as unknown as NoteRow[],
-    evidence: (evidence.data ?? []) as unknown as EvidenceRow[],
+    evidence: await signEvidence(supabase, (evidence.data ?? []) as unknown as EvidenceRow[]),
+    organizationOptions: organizationOptions.data ?? [],
     createdBy: creator.data?.callsign ?? null,
   }
 })

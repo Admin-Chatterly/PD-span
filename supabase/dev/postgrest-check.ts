@@ -16,9 +16,20 @@ import { createHmac } from "node:crypto"
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 import { getDashboardData } from "@/lib/data/dashboard"
+import { getBoardGraph, listBoardScopes } from "@/lib/data/board"
+import { isUuid } from "@/lib/data/filters"
+import { groupHits, searchHitHref } from "@/lib/search"
+import { isSafeStoragePath } from "@/lib/upload"
 import { getCaseDetail, listCases } from "@/lib/data/cases"
 import { getOrganizationDetail, listOrganizations } from "@/lib/data/organizations"
-import { getPersonDetail, listPeople, listTagSuggestions, searchPeople } from "@/lib/data/people"
+import {
+  idsTaggedWith,
+  listNoteTargets,
+  listNotes,
+  listTagSuggestions,
+  listTags,
+} from "@/lib/data/notes"
+import { getPersonDetail, listPeople, searchPeople } from "@/lib/data/people"
 
 const POSTGREST_URL = process.env.POSTGREST_URL ?? "http://127.0.0.1:3100"
 const JWT_SECRET = process.env.PGRST_JWT_SECRET ?? "local-dev-secret-at-least-32-characters-long"
@@ -79,6 +90,30 @@ async function main() {
     userId = signIn.data.user.id
     console.log(`live mode against ${LIVE_URL} as ${signIn.data.user.email}`)
   }
+
+  // --- guards on values that come in from the URL and the browser ------------
+  // A string of the right length is not a uuid; letting one through reaches the
+  // database and throws instead of rendering a not-found page.
+  assert(isUuid(MIKE))
+  assert(isUuid(MIKE.toUpperCase()))
+  assert(!isUuid("-".repeat(36)), "36 hyphens are not a uuid")
+  assert(!isUuid("b0000000-0000-4000-8000-00000000000"), "too short")
+  assert(!isUuid("b0000000-0000-4000-8000-000000000001x"), "trailing character")
+  assert(!isUuid("g0000000-0000-4000-8000-000000000001"), "not hexadecimal")
+  assert(!isUuid(""))
+
+  // The browser reports where it put an upload, so only the shapes this app
+  // writes are accepted.
+  assert(isSafeStoragePath(`people/${MIKE}/${MIKE}.png`))
+  assert(isSafeStoragePath(`people/${MIKE}/photo/${MIKE}.jpg`))
+  assert(isSafeStoragePath(`organizations/${GSF}/${GSF}.webp`))
+  assert(isSafeStoragePath(`unfiled/${MIKE}.gif`))
+  assert(!isSafeStoragePath("../../etc/passwd"), "traversal")
+  assert(!isSafeStoragePath(`people/../${MIKE}.png`), "traversal mid-path")
+  assert(!isSafeStoragePath(`/people/${MIKE}/x.png`), "absolute")
+  assert(!isSafeStoragePath(`people//${MIKE}.png`), "empty segment")
+  assert(!isSafeStoragePath(`secrets/${MIKE}.png`), "unknown prefix")
+  assert(!isSafeStoragePath(`people/${MIKE}/x`), "no extension")
 
   // --- list -----------------------------------------------------------------
   const all = await listPeople(supabase, {})
@@ -169,6 +204,83 @@ async function main() {
     assert.equal(dash.recentPeople.length, 6)
   }
 
+  // --- intel log: filters PostgREST has to accept -----------------------------
+  // The seed holds five notes: two tagged chop-shop, one attached to nothing.
+  const allNotes = await listNotes(supabase, {})
+  assert(allNotes.ok, allNotes.ok ? "" : allNotes.error)
+  if (seeded) {
+    assert.equal(allNotes.total, 5)
+    assert(allNotes.notes.every((n, i, arr) => i === 0 || arr[i - 1]!.created_at >= n.created_at))
+
+    const tagged = await listNotes(supabase, { tag: "chop-shop" })
+    assert(tagged.ok, tagged.ok ? "" : tagged.error)
+    assert.equal(tagged.total, 2)
+    assert(tagged.notes.every((n) => n.tags.includes("chop-shop")))
+
+    const general = await listNotes(supabase, { attachment: "general" })
+    assert(general.ok, general.ok ? "" : general.error)
+    assert.equal(general.total, 1)
+    assert(
+      general.notes.every((n) => !n.person_id && !n.organization_id && !n.case_id),
+      "general intel is attached to nothing"
+    )
+
+    const attached = await listNotes(supabase, { attachment: "attached" })
+    assert(attached.ok, attached.ok ? "" : attached.error)
+    assert.equal(attached.total, 4)
+
+    const bySource = await listNotes(supabase, { source: "tip" })
+    assert(bySource.ok, bySource.ok ? "" : bySource.error)
+    assert.equal(bySource.total, 1)
+
+    const byConfidence = await listNotes(supabase, { confidence: "high" })
+    assert(byConfidence.ok, byConfidence.ok ? "" : byConfidence.error)
+    assert.equal(byConfidence.total, 2)
+
+    // Two seeded notes mention a Sultan, one capitalised differently: the search
+    // is a case-insensitive substring over the body.
+    const byText = await listNotes(supabase, { q: "sultan" })
+    assert(byText.ok, byText.ok ? "" : byText.error)
+    assert.equal(byText.total, 2)
+    assert(byText.notes.every((n) => n.body.toLowerCase().includes("sultan")))
+
+    const combined = await listNotes(supabase, { tag: "chop-shop", confidence: "high" })
+    assert(combined.ok, combined.ok ? "" : combined.error)
+    assert.equal(combined.total, 1, "filters combine rather than replace each other")
+
+    const nothing = await listNotes(supabase, { tag: "no-such-tag" })
+    assert(nothing.ok, nothing.ok ? "" : nothing.error)
+    assert.equal(nothing.total, 0)
+
+    const counted = await listTags(supabase)
+    assert.equal(counted.find((t) => t.tag === "chop-shop")?.uses, 2)
+
+    // The tag filters on the people and organization lists resolve through notes.
+    const taggedPeople = await idsTaggedWith(supabase, "chop-shop", "person_id")
+    assert.equal(taggedPeople.length, 2)
+    assert(taggedPeople.includes(MIKE))
+    const taggedOrgs = await idsTaggedWith(supabase, "chop-shop", "organization_id")
+    assert.equal(taggedOrgs.length, 2)
+    assert(taggedOrgs.includes(GSF))
+
+    const peopleByTag = await listPeople(supabase, { tag: "chop-shop" })
+    assert(peopleByTag.ok, peopleByTag.ok ? "" : peopleByTag.error)
+    assert.equal(peopleByTag.people.length, 2)
+    const peopleByMissingTag = await listPeople(supabase, { tag: "no-such-tag" })
+    assert(peopleByMissingTag.ok, peopleByMissingTag.ok ? "" : peopleByMissingTag.error)
+    assert.equal(peopleByMissingTag.people.length, 0)
+
+    const orgsByTag = await listOrganizations(supabase, { tag: "recruiting" })
+    assert(orgsByTag.ok, orgsByTag.ok ? "" : orgsByTag.error)
+    assert.equal(orgsByTag.organizations.length, 1)
+  }
+
+  const composerTargets = await listNoteTargets(supabase)
+  if (seeded) {
+    assert.equal(composerTargets.organizations.length, 3)
+    assert.equal(composerTargets.cases.length, 1)
+  }
+
   // --- organizations and cases ----------------------------------------------
   const orgList = await listOrganizations(supabase)
   assert(orgList.ok, orgList.ok ? "" : orgList.error)
@@ -196,6 +308,228 @@ async function main() {
   }
   assert.equal(await getOrganizationDetail(supabase, "nope"), null)
   assert.equal(await getCaseDetail(supabase, "nope"), null)
+
+  // --- case links: the database allows exactly one target per row ------------
+  if (seeded) {
+    const detailBefore = await getCaseDetail(supabase, CASE1)
+    assert(detailBefore)
+    assert.equal(detailBefore.organizationOptions.length, 3)
+
+    const linkPerson = await supabase
+      .from("case_links")
+      .insert({ case_id: CASE1, person_id: "b0000000-0000-4000-8000-000000000006", role: "witness" })
+      .select("id")
+      .single()
+    assert(!linkPerson.error, linkPerson.error?.message)
+
+    const duplicate = await supabase
+      .from("case_links")
+      .insert({ case_id: CASE1, person_id: "b0000000-0000-4000-8000-000000000006" })
+    assert.equal(duplicate.error?.code, "23505", "the same person cannot be linked twice")
+
+    const bothTargets = await supabase
+      .from("case_links")
+      .insert({ case_id: CASE1, person_id: "b0000000-0000-4000-8000-000000000006", organization_id: GSF })
+    assert.equal(bothTargets.error?.code, "23514", "a link points at one target, not two")
+
+    const noTarget = await supabase.from("case_links").insert({ case_id: CASE1 })
+    assert.equal(noTarget.error?.code, "23514", "a link must point at something")
+
+    const detailAfter = await getCaseDetail(supabase, CASE1)
+    assert(detailAfter)
+    assert.equal(detailAfter.people.length, detailBefore.people.length + 1)
+    assert(detailAfter.people.some((l) => l.role === "witness"))
+
+    // removeCaseLink reads the row before deleting so both sides get refreshed.
+    const target = await supabase
+      .from("case_links")
+      .select("case_id, person_id, organization_id")
+      .eq("id", linkPerson.data.id)
+      .maybeSingle()
+    assert(!target.error, target.error?.message)
+    assert.equal(target.data?.case_id, CASE1)
+    const unlink = await supabase.from("case_links").delete().eq("id", linkPerson.data.id)
+    assert(!unlink.error, unlink.error?.message)
+
+    const detailRestored = await getCaseDetail(supabase, CASE1)
+    assert(detailRestored)
+    assert.equal(detailRestored.people.length, detailBefore.people.length)
+  }
+
+  // --- board graph: edges are only drawn between nodes that are on it --------
+  const scopes = await listBoardScopes(supabase)
+  if (seeded) {
+    assert.equal(scopes.cases.length, 1)
+    assert.equal(scopes.organizations.length, 3)
+
+    const all = await getBoardGraph(supabase, { kind: "all" })
+    assert(all.ok, all.ok ? "" : all.error)
+    assert.equal(all.graph.people.length, 6)
+    assert.equal(all.graph.organizations.length, 3)
+    assert.equal(all.graph.memberships.length, 5)
+    assert.equal(all.graph.associates.length, 3)
+    assert.equal(all.graph.truncated, false)
+
+    // The case holds three people and two organizations. The memberships
+    // between them come along; the associate links do not, because the other
+    // end of each one is not linked to the case.
+    const byCase = await getBoardGraph(supabase, { kind: "case", id: CASE1 })
+    assert(byCase.ok, byCase.ok ? "" : byCase.error)
+    assert.equal(byCase.graph.people.length, 3)
+    assert.equal(byCase.graph.organizations.length, 2)
+    assert.equal(byCase.graph.memberships.length, 3)
+    assert.equal(byCase.graph.associates.length, 0)
+
+    // Grove Street has three members, two of whom are linked to each other.
+    const byOrg = await getBoardGraph(supabase, { kind: "organization", id: GSF })
+    assert(byOrg.ok, byOrg.ok ? "" : byOrg.error)
+    assert.equal(byOrg.graph.organizations.length, 1)
+    assert.equal(byOrg.graph.people.length, 3)
+    assert.equal(byOrg.graph.memberships.length, 3)
+    assert.equal(byOrg.graph.associates.length, 2)
+
+    // Every edge must reference a node that is actually present.
+    for (const graph of [all.graph, byCase.graph, byOrg.graph]) {
+      const peopleIds = new Set(graph.people.map((p) => p.id))
+      const orgIds = new Set(graph.organizations.map((o) => o.id))
+      for (const m of graph.memberships) {
+        assert(peopleIds.has(m.personId), "membership points at a missing person")
+        assert(orgIds.has(m.organizationId), "membership points at a missing organization")
+      }
+      for (const a of graph.associates) {
+        assert(peopleIds.has(a.personId) && peopleIds.has(a.associateId), "dangling associate edge")
+      }
+    }
+  }
+
+  // A scope that names nothing real is empty rather than an error.
+  const bogusScope = await getBoardGraph(supabase, { kind: "case", id: "not-a-uuid" })
+  assert(bogusScope.ok, bogusScope.ok ? "" : bogusScope.error)
+  assert.equal(bogusScope.graph.people.length, 0)
+  const missingOrg = await getBoardGraph(supabase, {
+    kind: "organization",
+    id: "a0000000-0000-4000-8000-0000000000ff",
+  })
+  assert(missingOrg.ok, missingOrg.ok ? "" : missingOrg.error)
+  assert.equal(missingOrg.graph.organizations.length, 0)
+
+  // --- global search: every result has somewhere to go -----------------------
+  if (seeded) {
+    const hits = await supabase.rpc("search_all", { term: "46eek", per_type: 6 })
+    assert(!hits.error, hits.error?.message)
+    const vehicle = hits.data.find((h) => h.kind === "vehicle")
+    assert(vehicle, "the plate matches a vehicle")
+    assert.equal(vehicle.parent_kind, "person")
+    assert.equal(vehicle.parent_id, RED_MASK, "a vehicle result opens its owner")
+
+    const ownerless = await supabase.rpc("search_all", { term: "xr3nch", per_type: 6 })
+    assert(!ownerless.error, ownerless.error?.message)
+    const stray = ownerless.data.find((h) => h.kind === "vehicle")
+    assert(stray)
+    assert.equal(stray.parent_kind, null, "a vehicle with no owner has no parent")
+
+    const tagged = await supabase.rpc("search_all", { term: "recruiting", per_type: 6 })
+    assert(!tagged.error, tagged.error?.message)
+    const orgNote = tagged.data.find((h) => h.kind === "note")
+    assert(orgNote)
+    assert.equal(orgNote.parent_kind, "organization")
+
+    const general = await supabase.rpc("search_all", { term: "weapons drop", per_type: 6 })
+    assert(!general.error, general.error?.message)
+    const looseNote = general.data.find((h) => h.kind === "note")
+    assert(looseNote)
+    assert.equal(looseNote.parent_kind, null, "general intel belongs to nothing")
+
+    // The routing helper turns each of those into a real destination.
+    const toHit = (row: (typeof hits.data)[number]) => ({
+      kind: row.kind,
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      status: row.status,
+      score: row.score,
+      parentKind: row.parent_kind,
+      parentId: row.parent_id,
+    })
+    assert.equal(searchHitHref(toHit(vehicle), "46eek"), `/people/${RED_MASK}`)
+    assert(searchHitHref(toHit(stray), "xr3nch").startsWith("/people?q="))
+    assert(searchHitHref(toHit(orgNote), "recruiting").startsWith("/organizations/"))
+    assert.equal(searchHitHref(toHit(looseNote), "weapons drop"), "/intel?q=weapons%20drop")
+
+    const mixed = await supabase.rpc("search_all", { term: "grove", per_type: 6 })
+    assert(!mixed.error, mixed.error?.message)
+    const grouped = groupHits(mixed.data.map(toHit))
+    assert(grouped.length > 0, "results group by kind")
+    assert(grouped.every((g) => g.hits.length > 0), "no empty groups are rendered")
+    for (const group of grouped) {
+      for (const hit of group.hits) {
+        assert(searchHitHref(hit, "grove").startsWith("/"), "every result has a destination")
+      }
+    }
+  }
+
+  // --- person photos ---------------------------------------------------------
+  {
+    const person = await supabase
+      .from("people")
+      .insert({ description: "photo check", photo_path: "people/x/photo/a.png" })
+      .select("id, photo_path")
+      .single()
+    assert(!person.error, person.error?.message)
+    assert.equal(person.data.photo_path, "people/x/photo/a.png")
+
+    // Signing needs Storage, which this harness does not run, so the page falls
+    // back to no photo rather than failing.
+    const listed = await listPeople(supabase, { q: "photo check" })
+    assert(listed.ok, listed.ok ? "" : listed.error)
+    assert.equal(listed.people.length, 1)
+    assert.equal(listed.people[0]?.photoPath, "people/x/photo/a.png")
+    assert.equal(listed.people[0]?.photoUrl, null)
+
+    const detail = await getPersonDetail(supabase, person.data.id)
+    assert(detail)
+    assert.equal(detail.photoUrl, null)
+
+    const cleared = await supabase
+      .from("people")
+      .update({ photo_path: null })
+      .eq("id", person.data.id)
+      .select("photo_path")
+      .single()
+    assert(!cleared.error, cleared.error?.message)
+    assert.equal(cleared.data.photo_path, null)
+
+    await supabase.from("people").delete().eq("id", person.data.id)
+  }
+
+  // --- uploaded evidence -----------------------------------------------------
+  {
+    const person = await supabase.from("people").insert({ description: "evidence check" }).select("id").single()
+    assert(!person.error, person.error?.message)
+    const pid = person.data.id
+
+    const upload = await supabase
+      .from("evidence")
+      .insert({ person_id: pid, storage_path: "people/x/abc.png", caption: "screenshot" })
+      .select("id, storage_path, url")
+      .single()
+    assert(!upload.error, upload.error?.message)
+    assert.equal(upload.data.url, null, "an upload has no link")
+
+    const both = await supabase
+      .from("evidence")
+      .insert({ person_id: pid, storage_path: "a.png", url: "https://example.com/a.png" })
+    assert.equal(both.error?.code, "23514", "evidence is a file or a link, never both")
+
+    // Storage is not part of this harness, so signing degrades to unsigned rows
+    // rather than failing the page.
+    const detail = await getPersonDetail(supabase, pid)
+    assert(detail)
+    assert.equal(detail.evidence.length, 1)
+    assert.equal(detail.evidence[0]?.storage_path, "people/x/abc.png")
+
+    await supabase.from("people").delete().eq("id", pid)
+  }
 
   // --- mutations, same shapes as the Server Actions -------------------------
   const created = await supabase

@@ -131,6 +131,35 @@ begin
   end;
 end $$;
 
+-- Deleting an organization keeps the intel and drops only the join rows.
+do $$
+declare oid uuid; pid uuid; nid_shared uuid; nid_org uuid; n int;
+begin
+  insert into public.organizations (name) values ('Doomed Crew') returning id into oid;
+  insert into public.people (description) values ('member of the doomed crew') returning id into pid;
+  insert into public.memberships (person_id, organization_id) values (pid, oid);
+  insert into public.case_links (case_id, organization_id)
+    values ('d0000000-0000-4000-8000-000000000001', oid);
+  insert into public.notes (person_id, organization_id, body)
+    values (pid, oid, 'about the person, mentions the crew') returning id into nid_shared;
+  insert into public.notes (organization_id, body)
+    values (oid, 'about the crew only') returning id into nid_org;
+
+  delete from public.organizations where id = oid;
+
+  select count(*) into n from public.notes where id in (nid_shared, nid_org);
+  assert n = 2, format('both notes should survive, found %s', n);
+  select count(*) into n from public.notes where id = nid_shared and person_id = pid and organization_id is null;
+  assert n = 1, 'shared note keeps its person and loses the organization';
+  select count(*) into n from public.memberships where organization_id = oid;
+  assert n = 0, 'membership removed';
+  select count(*) into n from public.case_links where organization_id = oid;
+  assert n = 0, 'case link removed';
+
+  delete from public.notes where id in (nid_shared, nid_org);
+  delete from public.people where id = pid;
+end $$;
+
 -- Overview views.
 do $$
 declare r record;
@@ -177,6 +206,23 @@ begin
   assert n = 1, 'case title match';
   select count(*) into n from public.search_all('grove') where kind = 'organization';
   assert n = 1, 'organization match';
+
+  -- Results that have no page of their own carry the record they belong to.
+  select count(*) into n from public.search_all('46eek')
+   where kind = 'vehicle' and parent_kind = 'person' and parent_id = 'b0000000-0000-4000-8000-000000000004';
+  assert n = 1, 'a vehicle result points at its owner';
+  select count(*) into n from public.search_all('xr3nch')
+   where kind = 'vehicle' and parent_kind is null and parent_id is null;
+  assert n = 1, 'a vehicle with no owner has no parent';
+  select count(*) into n from public.search_all('recruiting')
+   where kind = 'note' and parent_kind = 'organization';
+  assert n = 1, 'a note on an organization points at it';
+  select count(*) into n from public.search_all('weapons drop')
+   where kind = 'note' and parent_kind is null;
+  assert n = 1, 'general intel has no parent';
+  select count(*) into n from public.search_all('sultans')
+   where kind = 'note' and parent_kind = 'person';
+  assert n = 1, 'a note on a person prefers the person';
   select count(*) into n from public.search_all('   ');
   assert n = 0, 'blank search returns nothing';
   select count(*) into n from public.distinct_tags();

@@ -1,7 +1,9 @@
 import { cache } from "react"
 import type { Tables, Views } from "@/lib/database.types"
-import { EVIDENCE_SELECT, type EvidenceRow } from "@/lib/data/evidence"
-import { NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
+import { EVIDENCE_SELECT, signEvidence, type EvidenceRow } from "@/lib/data/evidence"
+import { isUuid, likePattern, uuidList } from "@/lib/data/filters"
+import { idsTaggedWith, NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
+import { signPaths } from "@/lib/data/storage"
 import { parseAffiliations, type OrganizationAffiliation } from "@/lib/format"
 import type { Client } from "@/lib/supabase/types"
 
@@ -13,6 +15,7 @@ export type PersonSummary = {
   description: string | null
   status: string
   photoPath: string | null
+  photoUrl: string | null
   createdAt: string
   updatedAt: string
   organizations: OrganizationAffiliation[]
@@ -30,6 +33,7 @@ export function toPersonSummary(row: Views<"people_overview">): PersonSummary {
     description: row.description,
     status: row.status ?? "unknown",
     photoPath: row.photo_path,
+    photoUrl: null,
     createdAt: row.created_at ?? new Date(0).toISOString(),
     updatedAt: row.updated_at ?? row.created_at ?? new Date(0).toISOString(),
     organizations: parseAffiliations(row.organizations),
@@ -50,17 +54,13 @@ export type PeopleListParams = {
   q?: string
   status?: string
   sort?: PeopleSort
+  /** Everyone with at least one note carrying this tag. */
+  tag?: string
 }
 
 export type PeopleListResult =
   | { ok: true; people: PersonSummary[]; total: number }
   | { ok: false; error: string }
-
-/** Escape a user string for use inside a PostgREST ilike pattern and filter list. */
-function likePattern(term: string): string {
-  const escaped = term.replace(/[\\%_]/g, (c) => `\\${c}`).replace(/"/g, '\\"')
-  return `"%${escaped}%"`
-}
 
 function normalizePlate(term: string): string {
   return term.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
@@ -84,7 +84,7 @@ export async function listPeople(supabase: Client, params: PeopleListParams): Pr
         .not("person_id", "is", null)
         .ilike("plate", `%${plate}%`)
         .limit(200)
-      const ids = Array.from(new Set((vehicles ?? []).map((v) => v.person_id).filter(Boolean))) as string[]
+      const ids = uuidList((vehicles ?? []).map((v) => v.person_id))
       if (ids.length > 0) filters.push(`id.in.(${ids.join(",")})`)
     }
     query = query.or(filters.join(","))
@@ -92,6 +92,12 @@ export async function listPeople(supabase: Client, params: PeopleListParams): Pr
 
   if (params.status) {
     query = query.eq("status", params.status)
+  }
+
+  if (params.tag) {
+    const ids = await idsTaggedWith(supabase, params.tag, "person_id")
+    if (ids.length === 0) return { ok: true, people: [], total: 0 }
+    query = query.in("id", ids)
   }
 
   switch (params.sort ?? "updated") {
@@ -112,7 +118,15 @@ export async function listPeople(supabase: Client, params: PeopleListParams): Pr
 
   const { data, error, count } = await query.limit(500)
   if (error) return { ok: false, error: error.message }
-  return { ok: true, people: (data ?? []).map(toPersonSummary), total: count ?? data?.length ?? 0 }
+
+  const people = (data ?? []).map(toPersonSummary)
+  // One storage call for the whole page, and none at all when nobody has a photo.
+  const byPath = await signPaths(supabase, people.map((p) => p.photoPath))
+  return {
+    ok: true,
+    people: people.map((p) => (p.photoPath ? { ...p, photoUrl: byPath.get(p.photoPath) ?? null } : p)),
+    total: count ?? data?.length ?? 0,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +153,7 @@ export async function searchPeople(supabase: Client, term: string, excludeIds: s
     const pattern = likePattern(clean)
     query = query.or(`name.ilike.${pattern},alias.ilike.${pattern},description.ilike.${pattern}`)
   }
-  const valid = excludeIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id))
+  const valid = uuidList(excludeIds)
   if (valid.length > 0) {
     query = query.not("id", "in", `(${valid.join(",")})`)
   }
@@ -177,6 +191,8 @@ export type OrganizationOption = { id: string; name: string; type: string | null
 
 export type PersonDetail = {
   person: Tables<"people">
+  /** Signed for this request; null when there is no photo or signing failed. */
+  photoUrl: string | null
   memberships: MembershipRow[]
   associates: AssociateRow[]
   vehicles: Tables<"vehicles">[]
@@ -199,7 +215,7 @@ type RawAssociate = {
 
 /** Everything the person page needs. Memoised per request so metadata and page share one fetch. */
 export const getPersonDetail = cache(async (supabase: Client, id: string): Promise<PersonDetail | null> => {
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return null
+  if (!isUuid(id)) return null
 
   const { data: person, error: personError } = await supabase
     .from("people")
@@ -263,21 +279,20 @@ export const getPersonDetail = cache(async (supabase: Client, id: string): Promi
     }
   )
 
+  const photoUrl = person.photo_path
+    ? ((await signPaths(supabase, [person.photo_path])).get(person.photo_path) ?? null)
+    : null
+
   return {
     person,
+    photoUrl,
     memberships: ((memberships.data ?? []) as unknown as MembershipRow[]).filter((m) => m.organization),
     associates: associateRows,
     vehicles: vehicles.data ?? [],
     notes: (notes.data ?? []) as unknown as NoteRow[],
     caseLinks: ((caseLinks.data ?? []) as unknown as CaseLinkRow[]).filter((l) => l.case),
-    evidence: (evidence.data ?? []) as unknown as EvidenceRow[],
+    evidence: await signEvidence(supabase, (evidence.data ?? []) as unknown as EvidenceRow[]),
     organizationOptions: organizations.data ?? [],
     createdBy: creator.data?.callsign ?? null,
   }
 })
-
-/** Tag suggestions for the note composer. */
-export async function listTagSuggestions(supabase: Client): Promise<string[]> {
-  const { data } = await supabase.rpc("distinct_tags")
-  return (data ?? []).map((t) => t.tag).slice(0, 50)
-}

@@ -1,4 +1,5 @@
 import { AddEvidenceLinkDialog } from "@/components/evidence/add-evidence-link-dialog"
+import { UploadEvidenceDialog } from "@/components/evidence/upload-evidence-dialog"
 import { EvidenceCard } from "@/components/evidence/evidence-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { EvidenceRow, EvidenceTarget } from "@/lib/data/evidence"
@@ -8,13 +9,16 @@ export function EvidenceSection({ target, items }: { target: EvidenceTarget; ite
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Evidence</CardTitle>
-        <AddEvidenceLinkDialog target={target} />
+        <div className="flex gap-2">
+          <UploadEvidenceDialog target={target} />
+          <AddEvidenceLinkDialog target={target} />
+        </div>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nothing attached. Paste a Medal.tv clip, a video link or an image URL. File uploads
-            arrive in Phase 6.
+            Nothing attached. Upload a screenshot, or paste a Medal.tv clip, a video link or an
+            image URL.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
