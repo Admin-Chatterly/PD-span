@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { CheckIcon, UndoIcon, XIcon } from "lucide-react"
-import { removeMembership, setMembershipConfirmed } from "@/app/(app)/people/actions"
+import { removeMembership, setMembershipConfirmed } from "@/app/(app)/memberships/actions"
 import { ActionButton } from "@/components/action-button"
 import { MembershipBadge, OrganizationTypeBadge } from "@/components/badges"
 import { AddMembershipDialog } from "@/components/people/add-membership-dialog"

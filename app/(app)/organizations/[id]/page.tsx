@@ -1,23 +1,17 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeftIcon, MapPinIcon } from "lucide-react"
-import {
-  CaseStatusBadge,
-  MembershipBadge,
-  OrganizationStatusBadge,
-  OrganizationTypeBadge,
-  PersonStatusBadge,
-  UnknownBadge,
-} from "@/components/badges"
+import { ArrowLeftIcon } from "lucide-react"
+import { CaseStatusBadge } from "@/components/badges"
 import { EvidenceSection } from "@/components/evidence/evidence-section"
 import { NotesSection } from "@/components/notes/notes-section"
-import { RelativeTime } from "@/components/relative-time"
+import { OrganizationDangerZone } from "@/components/organizations/organization-danger-zone"
+import { OrganizationIdentityCard } from "@/components/organizations/organization-identity-card"
+import { RosterSection } from "@/components/organizations/roster-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getOrganizationDetail } from "@/lib/data/organizations"
 import { listTagSuggestions } from "@/lib/data/people"
-import { isUnidentified, personLabel } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
 
 export async function generateMetadata(props: PageProps<"/organizations/[id]">): Promise<Metadata> {
@@ -45,28 +39,7 @@ export default async function OrganizationPage(props: PageProps<"/organizations/
         </Link>
       </Button>
 
-      <Card>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{organization.name}</h1>
-            <OrganizationTypeBadge type={organization.type} />
-            <OrganizationStatusBadge status={organization.status} />
-          </div>
-          {organization.territory ? (
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPinIcon className="size-4" /> {organization.territory}
-            </p>
-          ) : null}
-          {organization.notes ? (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">{organization.notes}</p>
-          ) : null}
-          <p className="text-xs text-muted-foreground">
-            Opened <RelativeTime iso={organization.created_at} />
-            {detail.createdBy ? ` by ${detail.createdBy}` : ""} · updated{" "}
-            <RelativeTime iso={organization.updated_at} />
-          </p>
-        </CardContent>
-      </Card>
+      <OrganizationIdentityCard organization={organization} createdBy={detail.createdBy} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
@@ -78,36 +51,7 @@ export default async function OrganizationPage(props: PageProps<"/organizations/
           />
         </div>
         <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Roster</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {detail.members.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No known members. Add people to this organization from their own page.
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y divide-border/60">
-                  {detail.members.map((m) => (
-                    <li key={m.person.id} className="flex flex-col gap-1 py-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Link href={`/people/${m.person.id}`} className="font-medium hover:underline">
-                          {personLabel(m.person)}
-                        </Link>
-                        {isUnidentified(m.person) ? <UnknownBadge /> : null}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1">
-                        <PersonStatusBadge status={m.person.status} />
-                        <MembershipBadge isConfirmed={m.is_confirmed} />
-                        {m.role ? <span className="text-xs text-muted-foreground">{m.role}</span> : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+          <RosterSection organizationId={organization.id} members={detail.members} />
 
           <Card>
             <CardHeader>
@@ -132,6 +76,17 @@ export default async function OrganizationPage(props: PageProps<"/organizations/
           </Card>
 
           <EvidenceSection target={{ organizationId: organization.id }} items={detail.evidence} />
+
+          <OrganizationDangerZone
+            organizationId={organization.id}
+            name={organization.name}
+            counts={{
+              members: detail.members.length,
+              notes: detail.notes.length,
+              caseLinks: detail.caseLinks.length,
+              evidence: detail.evidence.length,
+            }}
+          />
         </div>
       </div>
     </div>

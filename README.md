@@ -89,13 +89,17 @@ have a database URL you can regenerate it:
 | --- | --- |
 | `people` | Suspects and persons of interest. Every field except `id` is optional; a row can be only a description. `status` is one of the values in `lib/constants.ts`. |
 | `organizations` | Gangs, crews, cartels, businesses. |
-| `memberships` | People ↔ organizations, with a role and a confirmed/suspected flag. |
+| `memberships` | People ↔ organizations, with a role and a confirmed/suspected flag. Managed from either side. |
 | `associates` | Person ↔ person links, undirected, one row per pair. |
 | `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing. Tags, source, confidence, and the author (from the session). |
 | `vehicles` | Plates and models, optionally tied to a person. Plates are stored upper-case. |
 | `cases` / `case_links` | An investigation and the people/organizations in it. |
 | `evidence` | Links (Medal.tv clips, YouTube, Streamable, image URLs) or, later, uploads in the private `intel` bucket, attached to a person, organization or case. Clip links play inline. |
 | `profiles` | One row per login, holding the officer's callsign. |
+
+Deleting an organization keeps the intel: notes are detached rather than
+deleted, and members keep their own records. Memberships, case links and
+evidence attached to the organization go with it.
 
 Views `people_overview`, `organizations_overview`, `cases_overview` back the
 list pages. Functions: `search_all(term)` for global search, `merge_people(keep,

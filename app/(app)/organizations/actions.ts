@@ -3,17 +3,12 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
-import type { FormState } from "@/lib/action-types"
+import type { ActionResult, FormState } from "@/lib/action-types"
 import { requireUser } from "@/lib/auth"
 import { ORGANIZATION_STATUSES, ORGANIZATION_TYPES } from "@/lib/constants"
+import { firstIssue, optionalText, readFields, uuid } from "@/lib/form"
+import { revalidateOrganization } from "@/lib/revalidate"
 import { createClient } from "@/lib/supabase/server"
-
-const optionalText = z
-  .string()
-  .trim()
-  .max(4000)
-  .optional()
-  .transform((v) => (v ? v : null))
 
 const organizationSchema = z.object({
   name: z.string().trim().min(1, "Give the organization a name.").max(200),
@@ -23,21 +18,19 @@ const organizationSchema = z.object({
   notes: optionalText,
 })
 
+function parseOrganization(formData: FormData) {
+  const fields = readFields(formData, ["name", "type", "territory", "status", "notes"])
+  return organizationSchema.safeParse({
+    ...fields,
+    // "none" is the placeholder the type dropdown uses for an unknown type.
+    type: fields.type && fields.type !== "none" ? fields.type : undefined,
+  })
+}
+
 export async function createOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
-  const get = (k: string) => {
-    const v = formData.get(k)
-    return typeof v === "string" ? v : undefined
-  }
-  const type = get("type")
-  const parsed = organizationSchema.safeParse({
-    name: get("name") ?? "",
-    type: type && type !== "none" ? type : undefined,
-    territory: get("territory"),
-    status: get("status") || undefined,
-    notes: get("notes"),
-  })
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input." }
+  const parsed = parseOrganization(formData)
+  if (!parsed.success) return { error: firstIssue(parsed.error) }
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -50,4 +43,44 @@ export async function createOrganization(_prev: FormState, formData: FormData): 
   revalidatePath("/organizations")
   revalidatePath("/")
   redirect(`/organizations/${data.id}`)
+}
+
+export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireUser()
+  const id = uuid.safeParse(formData.get("id"))
+  if (!id.success) return { error: "Missing organization id." }
+  const parsed = parseOrganization(formData)
+  if (!parsed.success) return { error: firstIssue(parsed.error) }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("organizations")
+    .update({ ...parsed.data, type: parsed.data.type ?? null })
+    .eq("id", id.data)
+  if (error) return { error: error.message }
+
+  revalidateOrganization(id.data)
+  return { ok: true, version: Date.now() }
+}
+
+export async function deleteOrganization(organizationId: string): Promise<ActionResult> {
+  await requireUser()
+  const id = uuid.safeParse(organizationId)
+  if (!id.success) return { ok: false, error: "Invalid id." }
+
+  const supabase = await createClient()
+  // Members keep their own records, and notes are detached rather than deleted
+  // (see migration 0003), so only the organization itself goes.
+  const { data: members } = await supabase
+    .from("memberships")
+    .select("person_id")
+    .eq("organization_id", id.data)
+  const { error } = await supabase.from("organizations").delete().eq("id", id.data)
+  if (error) return { ok: false, error: error.message }
+
+  for (const m of members ?? []) revalidatePath(`/people/${m.person_id}`)
+  revalidatePath("/organizations")
+  revalidatePath("/people")
+  revalidatePath("/")
+  redirect("/organizations")
 }

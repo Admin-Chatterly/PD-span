@@ -131,6 +131,35 @@ begin
   end;
 end $$;
 
+-- Deleting an organization keeps the intel and drops only the join rows.
+do $$
+declare oid uuid; pid uuid; nid_shared uuid; nid_org uuid; n int;
+begin
+  insert into public.organizations (name) values ('Doomed Crew') returning id into oid;
+  insert into public.people (description) values ('member of the doomed crew') returning id into pid;
+  insert into public.memberships (person_id, organization_id) values (pid, oid);
+  insert into public.case_links (case_id, organization_id)
+    values ('d0000000-0000-4000-8000-000000000001', oid);
+  insert into public.notes (person_id, organization_id, body)
+    values (pid, oid, 'about the person, mentions the crew') returning id into nid_shared;
+  insert into public.notes (organization_id, body)
+    values (oid, 'about the crew only') returning id into nid_org;
+
+  delete from public.organizations where id = oid;
+
+  select count(*) into n from public.notes where id in (nid_shared, nid_org);
+  assert n = 2, format('both notes should survive, found %s', n);
+  select count(*) into n from public.notes where id = nid_shared and person_id = pid and organization_id is null;
+  assert n = 1, 'shared note keeps its person and loses the organization';
+  select count(*) into n from public.memberships where organization_id = oid;
+  assert n = 0, 'membership removed';
+  select count(*) into n from public.case_links where organization_id = oid;
+  assert n = 0, 'case link removed';
+
+  delete from public.notes where id in (nid_shared, nid_org);
+  delete from public.people where id = pid;
+end $$;
+
 -- Overview views.
 do $$
 declare r record;

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { requireUser } from "@/lib/auth"
+import { firstIssue, optionalText, readFields, uuid } from "@/lib/form"
+import { revalidatePerson } from "@/lib/revalidate"
 import { CONFIDENCES, NOTE_SOURCES, PERSON_STATUSES } from "@/lib/constants"
 import { searchPeople, type PersonPick } from "@/lib/data/people"
 import { createClient } from "@/lib/supabase/server"
@@ -12,35 +14,12 @@ import type { ActionResult, FormState } from "@/lib/action-types"
 
 export type { ActionResult, FormState }
 
-const uuid = z.uuid()
-
-const optionalText = z
-  .string()
-  .trim()
-  .max(4000)
-  .optional()
-  .transform((v) => (v ? v : null))
-
 const personSchema = z.object({
   name: optionalText,
   alias: optionalText,
   description: optionalText,
   status: z.enum(PERSON_STATUSES).default("unknown"),
 })
-
-function read(formData: FormData, keys: readonly string[]) {
-  const out: Record<string, string | undefined> = {}
-  for (const key of keys) {
-    const value = formData.get(key)
-    out[key] = typeof value === "string" ? value : undefined
-  }
-  return out
-}
-
-function firstIssue(error: z.ZodError): string {
-  const issue = error.issues[0]
-  return issue ? `${issue.path.join(".") || "form"}: ${issue.message}` : "Invalid input."
-}
 
 function parseTags(value: string | undefined): string[] {
   if (!value) return []
@@ -54,19 +33,13 @@ function parseTags(value: string | undefined): string[] {
   )
 }
 
-function revalidatePerson(id: string) {
-  revalidatePath(`/people/${id}`)
-  revalidatePath("/people")
-  revalidatePath("/")
-}
-
 // ---------------------------------------------------------------------------
 // People
 // ---------------------------------------------------------------------------
 
 export async function createPerson(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
-  const parsed = personSchema.safeParse(read(formData, ["name", "alias", "description", "status"]))
+  const parsed = personSchema.safeParse(readFields(formData, ["name", "alias", "description", "status"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   const { name, alias, description } = parsed.data
   if (!name && !alias && !description) {
@@ -105,7 +78,7 @@ export async function updatePerson(_prev: FormState, formData: FormData): Promis
   await requireUser()
   const id = uuid.safeParse(formData.get("id"))
   if (!id.success) return { error: "Missing person id." }
-  const parsed = personSchema.safeParse(read(formData, ["name", "alias", "description", "status"]))
+  const parsed = personSchema.safeParse(readFields(formData, ["name", "alias", "description", "status"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   const { name, alias, description } = parsed.data
   if (!name && !alias && !description) {
@@ -176,74 +149,6 @@ export async function searchPeopleAction(term: string, excludeIds: string[] = []
 }
 
 // ---------------------------------------------------------------------------
-// Memberships
-// ---------------------------------------------------------------------------
-
-const membershipSchema = z.object({
-  person_id: uuid,
-  organization_id: uuid,
-  role: optionalText,
-  is_confirmed: z.boolean(),
-})
-
-export async function addMembership(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireUser()
-  const raw = read(formData, ["person_id", "organization_id", "role"])
-  const parsed = membershipSchema.safeParse({ ...raw, is_confirmed: formData.get("is_confirmed") === "on" })
-  if (!parsed.success) return { error: "Pick an organization." }
-
-  const supabase = await createClient()
-  const { error } = await supabase.from("memberships").insert(parsed.data)
-  if (error) {
-    return { error: error.code === "23505" ? "Already listed in that organization." : error.message }
-  }
-
-  revalidatePerson(parsed.data.person_id)
-  revalidatePath(`/organizations/${parsed.data.organization_id}`)
-  return { ok: true, version: Date.now() }
-}
-
-export async function setMembershipConfirmed(
-  personId: string,
-  organizationId: string,
-  isConfirmed: boolean
-): Promise<ActionResult> {
-  await requireUser()
-  const parsed = z.object({ p: uuid, o: uuid }).safeParse({ p: personId, o: organizationId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
-
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("memberships")
-    .update({ is_confirmed: isConfirmed })
-    .eq("person_id", parsed.data.p)
-    .eq("organization_id", parsed.data.o)
-  if (error) return { ok: false, error: error.message }
-
-  revalidatePerson(parsed.data.p)
-  revalidatePath(`/organizations/${parsed.data.o}`)
-  return { ok: true }
-}
-
-export async function removeMembership(personId: string, organizationId: string): Promise<ActionResult> {
-  await requireUser()
-  const parsed = z.object({ p: uuid, o: uuid }).safeParse({ p: personId, o: organizationId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
-
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("memberships")
-    .delete()
-    .eq("person_id", parsed.data.p)
-    .eq("organization_id", parsed.data.o)
-  if (error) return { ok: false, error: error.message }
-
-  revalidatePerson(parsed.data.p)
-  revalidatePath(`/organizations/${parsed.data.o}`)
-  return { ok: true }
-}
-
-// ---------------------------------------------------------------------------
 // Associates
 // ---------------------------------------------------------------------------
 
@@ -257,7 +162,7 @@ export async function addAssociate(_prev: FormState, formData: FormData): Promis
       is_confirmed: z.boolean(),
     })
     .safeParse({
-      ...read(formData, ["person_id", "associate_id", "relationship"]),
+      ...readFields(formData, ["person_id", "associate_id", "relationship"]),
       is_confirmed: formData.get("is_confirmed") === "on",
     })
   if (!parsed.success) return { error: "Pick a person to link." }
@@ -309,7 +214,7 @@ export async function addVehicle(_prev: FormState, formData: FormData): Promise<
       color: optionalText,
       notes: optionalText,
     })
-    .safeParse(read(formData, ["person_id", "plate", "model", "color", "notes"]))
+    .safeParse(readFields(formData, ["person_id", "plate", "model", "color", "notes"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   if (!parsed.data.plate && !parsed.data.model) {
     return { error: "Give at least a plate or a model." }
@@ -367,7 +272,7 @@ const noteSchema = z.object({
 
 export async function addNote(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
-  const raw = read(formData, ["person_id", "organization_id", "case_id", "body", "source", "confidence"])
+  const raw = readFields(formData, ["person_id", "organization_id", "case_id", "body", "source", "confidence"])
   const parsed = noteSchema.safeParse({
     ...raw,
     person_id: raw.person_id || undefined,
@@ -383,7 +288,7 @@ export async function addNote(_prev: FormState, formData: FormData): Promise<For
     organization_id: parsed.data.organization_id ?? null,
     case_id: parsed.data.case_id ?? null,
     body: parsed.data.body,
-    tags: parseTags(read(formData, ["tags"]).tags),
+    tags: parseTags(readFields(formData, ["tags"]).tags),
     source: parsed.data.source ?? null,
     confidence: parsed.data.confidence,
   })
