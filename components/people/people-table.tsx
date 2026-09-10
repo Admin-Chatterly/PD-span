@@ -43,14 +43,27 @@ export function PeopleTable({ people, filtered }: { people: PersonSummary[]; fil
             return (
               <TableRow key={p.id}>
                 <TableCell className="max-w-md">
-                  <Link href={`/people/${p.id}`} className="group block">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium group-hover:underline">{personLabel(p)}</span>
-                      {isUnidentified(p) ? <UnknownBadge /> : null}
-                    </div>
-                    {secondary ? (
-                      <p className="truncate text-xs text-muted-foreground">{truncate(secondary, 110)}</p>
+                  <Link href={`/people/${p.id}`} className="group flex items-center gap-3">
+                    {p.photoUrl ? (
+                      // Signed URL from the private bucket, so next/image cannot host it.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.photoUrl}
+                        alt=""
+                        className="size-9 shrink-0 rounded-full object-cover"
+                      />
                     ) : null}
+                    <span className="min-w-0">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium group-hover:underline">{personLabel(p)}</span>
+                        {isUnidentified(p) ? <UnknownBadge /> : null}
+                      </span>
+                      {secondary ? (
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {truncate(secondary, 110)}
+                        </span>
+                      ) : null}
+                    </span>
                   </Link>
                 </TableCell>
                 <TableCell>

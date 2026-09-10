@@ -42,7 +42,7 @@ export default async function PersonPage(props: PageProps<"/people/[id]">) {
         </Link>
       </Button>
 
-      <IdentityCard person={person} createdBy={detail.createdBy} />
+      <IdentityCard person={person} createdBy={detail.createdBy} photoUrl={detail.photoUrl} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">

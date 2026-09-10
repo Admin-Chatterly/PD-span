@@ -6,7 +6,7 @@ import { z } from "zod"
 import { requireUser } from "@/lib/auth"
 import { firstIssue, optionalText, readFields, uuid } from "@/lib/form"
 import { revalidatePerson } from "@/lib/revalidate"
-import { PERSON_STATUSES } from "@/lib/constants"
+import { PERSON_STATUSES, STORAGE_BUCKET } from "@/lib/constants"
 import { searchPeople, type PersonPick } from "@/lib/data/people"
 import { createClient } from "@/lib/supabase/server"
 
@@ -95,6 +95,64 @@ export async function updatePersonStatus(personId: string, status: string): Prom
   if (error) return { ok: false, error: error.message }
 
   revalidatePerson(parsed.data.id)
+  return { ok: true }
+}
+
+/**
+ * The photo is already in the bucket by the time this runs: the browser uploads
+ * it directly, the same way evidence does. The previous file is removed, so a
+ * replaced mugshot does not linger.
+ */
+export async function setPersonPhoto(personId: string, storagePath: string): Promise<ActionResult> {
+  await requireUser()
+  const parsed = z
+    .object({ id: uuid, path: z.string().trim().min(1).max(500) })
+    .safeParse({ id: personId, path: storagePath })
+  if (!parsed.success) return { ok: false, error: "Invalid photo." }
+
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from("people")
+    .select("photo_path")
+    .eq("id", parsed.data.id)
+    .maybeSingle()
+
+  const { error } = await supabase
+    .from("people")
+    .update({ photo_path: parsed.data.path })
+    .eq("id", parsed.data.id)
+  if (error) {
+    // Without the row pointing at it the file is unreachable, so it goes too.
+    await supabase.storage.from(STORAGE_BUCKET).remove([parsed.data.path])
+    return { ok: false, error: error.message }
+  }
+
+  if (existing?.photo_path && existing.photo_path !== parsed.data.path) {
+    await supabase.storage.from(STORAGE_BUCKET).remove([existing.photo_path])
+  }
+  revalidatePerson(parsed.data.id)
+  return { ok: true }
+}
+
+export async function removePersonPhoto(personId: string): Promise<ActionResult> {
+  await requireUser()
+  const id = uuid.safeParse(personId)
+  if (!id.success) return { ok: false, error: "Invalid id." }
+
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from("people")
+    .select("photo_path")
+    .eq("id", id.data)
+    .maybeSingle()
+
+  const { error } = await supabase.from("people").update({ photo_path: null }).eq("id", id.data)
+  if (error) return { ok: false, error: error.message }
+
+  if (existing?.photo_path) {
+    await supabase.storage.from(STORAGE_BUCKET).remove([existing.photo_path])
+  }
+  revalidatePerson(id.data)
   return { ok: true }
 }
 

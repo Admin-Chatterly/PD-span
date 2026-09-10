@@ -442,6 +442,40 @@ async function main() {
     }
   }
 
+  // --- person photos ---------------------------------------------------------
+  {
+    const person = await supabase
+      .from("people")
+      .insert({ description: "photo check", photo_path: "people/x/photo/a.png" })
+      .select("id, photo_path")
+      .single()
+    assert(!person.error, person.error?.message)
+    assert.equal(person.data.photo_path, "people/x/photo/a.png")
+
+    // Signing needs Storage, which this harness does not run, so the page falls
+    // back to no photo rather than failing.
+    const listed = await listPeople(supabase, { q: "photo check" })
+    assert(listed.ok, listed.ok ? "" : listed.error)
+    assert.equal(listed.people.length, 1)
+    assert.equal(listed.people[0]?.photoPath, "people/x/photo/a.png")
+    assert.equal(listed.people[0]?.photoUrl, null)
+
+    const detail = await getPersonDetail(supabase, person.data.id)
+    assert(detail)
+    assert.equal(detail.photoUrl, null)
+
+    const cleared = await supabase
+      .from("people")
+      .update({ photo_path: null })
+      .eq("id", person.data.id)
+      .select("photo_path")
+      .single()
+    assert(!cleared.error, cleared.error?.message)
+    assert.equal(cleared.data.photo_path, null)
+
+    await supabase.from("people").delete().eq("id", person.data.id)
+  }
+
   // --- uploaded evidence -----------------------------------------------------
   {
     const person = await supabase.from("people").insert({ description: "evidence check" }).select("id").single()

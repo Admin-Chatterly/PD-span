@@ -1,9 +1,9 @@
 import { cache } from "react"
 import type { Tables, Views } from "@/lib/database.types"
 import { EVIDENCE_SELECT, signEvidence, type EvidenceRow } from "@/lib/data/evidence"
-import { NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
 import { isUuid, likePattern, uuidList } from "@/lib/data/filters"
-import { idsTaggedWith } from "@/lib/data/notes"
+import { idsTaggedWith, NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
+import { signPaths } from "@/lib/data/storage"
 import { parseAffiliations, type OrganizationAffiliation } from "@/lib/format"
 import type { Client } from "@/lib/supabase/types"
 
@@ -15,6 +15,7 @@ export type PersonSummary = {
   description: string | null
   status: string
   photoPath: string | null
+  photoUrl: string | null
   createdAt: string
   updatedAt: string
   organizations: OrganizationAffiliation[]
@@ -32,6 +33,7 @@ export function toPersonSummary(row: Views<"people_overview">): PersonSummary {
     description: row.description,
     status: row.status ?? "unknown",
     photoPath: row.photo_path,
+    photoUrl: null,
     createdAt: row.created_at ?? new Date(0).toISOString(),
     updatedAt: row.updated_at ?? row.created_at ?? new Date(0).toISOString(),
     organizations: parseAffiliations(row.organizations),
@@ -116,7 +118,15 @@ export async function listPeople(supabase: Client, params: PeopleListParams): Pr
 
   const { data, error, count } = await query.limit(500)
   if (error) return { ok: false, error: error.message }
-  return { ok: true, people: (data ?? []).map(toPersonSummary), total: count ?? data?.length ?? 0 }
+
+  const people = (data ?? []).map(toPersonSummary)
+  // One storage call for the whole page, and none at all when nobody has a photo.
+  const byPath = await signPaths(supabase, people.map((p) => p.photoPath))
+  return {
+    ok: true,
+    people: people.map((p) => (p.photoPath ? { ...p, photoUrl: byPath.get(p.photoPath) ?? null } : p)),
+    total: count ?? data?.length ?? 0,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -181,6 +191,8 @@ export type OrganizationOption = { id: string; name: string; type: string | null
 
 export type PersonDetail = {
   person: Tables<"people">
+  /** Signed for this request; null when there is no photo or signing failed. */
+  photoUrl: string | null
   memberships: MembershipRow[]
   associates: AssociateRow[]
   vehicles: Tables<"vehicles">[]
@@ -267,8 +279,13 @@ export const getPersonDetail = cache(async (supabase: Client, id: string): Promi
     }
   )
 
+  const photoUrl = person.photo_path
+    ? ((await signPaths(supabase, [person.photo_path])).get(person.photo_path) ?? null)
+    : null
+
   return {
     person,
+    photoUrl,
     memberships: ((memberships.data ?? []) as unknown as MembershipRow[]).filter((m) => m.organization),
     associates: associateRows,
     vehicles: vehicles.data ?? [],

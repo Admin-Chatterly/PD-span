@@ -100,7 +100,7 @@ have a database URL you can regenerate it:
 
 | Table | What it is |
 | --- | --- |
-| `people` | Suspects and persons of interest. Every field except `id` is optional; a row can be only a description. `status` is one of the values in `lib/constants.ts`. |
+| `people` | Suspects and persons of interest. Every field except `id` is optional; a row can be only a description. `status` is one of the values in `lib/constants.ts`. A photo, when there is one, lives in the private bucket like evidence. |
 | `organizations` | Gangs, crews, cartels, businesses. |
 | `memberships` | People ↔ organizations, with a role and a confirmed/suspected flag. Managed from either side. |
 | `associates` | Person ↔ person links, undirected, one row per pair. |
