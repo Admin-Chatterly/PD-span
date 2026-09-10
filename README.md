@@ -107,7 +107,7 @@ have a database URL you can regenerate it:
 | `notes` | The intel log. Attaches to a person, an organization, a case, any mix, or nothing at all, which is how a tip gets recorded before anyone knows who it is about. Tags, source, confidence, and the author (from the session). Browse and filter them all at `/intel`. |
 | `vehicles` | Plates and models, optionally tied to a person. Plates are stored upper-case. |
 | `cases` / `case_links` | An investigation and the people and organizations in it, each with a role in that case. A link points at exactly one of the two, which the database enforces. |
-| `evidence` | Links (Medal.tv clips, YouTube, Streamable, image URLs) or, later, uploads in the private `intel` bucket, attached to a person, organization or case. Clip links play inline. |
+| `evidence` | Either an uploaded image in the private `intel` bucket or an external link (Medal.tv clips, YouTube, Streamable, image URLs), attached to a person, organization or case. Clip links play inline; uploads render through short-lived signed URLs and never become public. |
 | `profiles` | One row per login, holding the officer's callsign. |
 
 Deleting an organization keeps the intel: notes are detached rather than
@@ -117,6 +117,10 @@ evidence attached to the organization go with it.
 Tags live only on notes, so every tag filter in the app resolves through them:
 `/intel?tag=x` for the intel itself, `/people?tag=x` and `/organizations?tag=x`
 for everyone with a note carrying that tag.
+
+Ctrl+K (or cmd+K) opens one search across people, aliases, descriptions,
+plates, territories, note bodies and tags, grouped by kind. Results that have no
+page of their own, a vehicle or a note, open the record they belong to.
 
 `/board` draws the corkboard: people and organizations as nodes, memberships
 and associate links as edges, laid out by a force simulation and clickable
@@ -135,6 +139,8 @@ filter.
 
 Every table has Row Level Security enabled. Only signed-in users (the
 `authenticated` role) can read or write; the anon key sees nothing. The storage
-bucket is private and files are served through short-lived signed URLs. The
+bucket is private: uploads go straight from the browser to Storage, so a large
+image never passes through the server, and they are only ever read back through
+signed URLs minted per request. The
 site's proxy redirects anonymous visitors to `/login`, and every Server Action
 checks the session again.

@@ -1,6 +1,6 @@
 import { cache } from "react"
 import type { Tables, Views } from "@/lib/database.types"
-import { EVIDENCE_SELECT, type EvidenceRow } from "@/lib/data/evidence"
+import { EVIDENCE_SELECT, signEvidence, type EvidenceRow } from "@/lib/data/evidence"
 import { NOTE_SELECT, type NoteRow } from "@/lib/data/notes"
 import { isUuid, likePattern, uuidList } from "@/lib/data/filters"
 import { idsTaggedWith } from "@/lib/data/notes"
@@ -274,7 +274,7 @@ export const getPersonDetail = cache(async (supabase: Client, id: string): Promi
     vehicles: vehicles.data ?? [],
     notes: (notes.data ?? []) as unknown as NoteRow[],
     caseLinks: ((caseLinks.data ?? []) as unknown as CaseLinkRow[]).filter((l) => l.case),
-    evidence: (evidence.data ?? []) as unknown as EvidenceRow[],
+    evidence: await signEvidence(supabase, (evidence.data ?? []) as unknown as EvidenceRow[]),
     organizationOptions: organizations.data ?? [],
     createdBy: creator.data?.callsign ?? null,
   }

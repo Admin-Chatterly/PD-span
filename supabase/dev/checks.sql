@@ -206,6 +206,23 @@ begin
   assert n = 1, 'case title match';
   select count(*) into n from public.search_all('grove') where kind = 'organization';
   assert n = 1, 'organization match';
+
+  -- Results that have no page of their own carry the record they belong to.
+  select count(*) into n from public.search_all('46eek')
+   where kind = 'vehicle' and parent_kind = 'person' and parent_id = 'b0000000-0000-4000-8000-000000000004';
+  assert n = 1, 'a vehicle result points at its owner';
+  select count(*) into n from public.search_all('xr3nch')
+   where kind = 'vehicle' and parent_kind is null and parent_id is null;
+  assert n = 1, 'a vehicle with no owner has no parent';
+  select count(*) into n from public.search_all('recruiting')
+   where kind = 'note' and parent_kind = 'organization';
+  assert n = 1, 'a note on an organization points at it';
+  select count(*) into n from public.search_all('weapons drop')
+   where kind = 'note' and parent_kind is null;
+  assert n = 1, 'general intel has no parent';
+  select count(*) into n from public.search_all('sultans')
+   where kind = 'note' and parent_kind = 'person';
+  assert n = 1, 'a note on a person prefers the person';
   select count(*) into n from public.search_all('   ');
   assert n = 0, 'blank search returns nothing';
   select count(*) into n from public.distinct_tags();

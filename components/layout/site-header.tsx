@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { LogOutIcon, ShieldIcon } from "lucide-react"
 import { signOut } from "@/app/login/actions"
 import { LogIntelButton } from "@/components/notes/log-intel-button"
+import { GlobalSearch } from "@/components/search/global-search"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -47,6 +48,7 @@ export function SiteHeader({ callsign }: { callsign: string }) {
           })}
         </nav>
         <div className="flex items-center gap-2">
+          <GlobalSearch />
           <LogIntelButton />
           <span className="hidden text-sm text-muted-foreground lg:inline">{callsign}</span>
           <form action={signOut}>

@@ -17,6 +17,7 @@ import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 import { getDashboardData } from "@/lib/data/dashboard"
 import { getBoardGraph, listBoardScopes } from "@/lib/data/board"
+import { groupHits, searchHitHref } from "@/lib/search"
 import { getCaseDetail, listCases } from "@/lib/data/cases"
 import { getOrganizationDetail, listOrganizations } from "@/lib/data/organizations"
 import {
@@ -385,6 +386,90 @@ async function main() {
   })
   assert(missingOrg.ok, missingOrg.ok ? "" : missingOrg.error)
   assert.equal(missingOrg.graph.organizations.length, 0)
+
+  // --- global search: every result has somewhere to go -----------------------
+  if (seeded) {
+    const hits = await supabase.rpc("search_all", { term: "46eek", per_type: 6 })
+    assert(!hits.error, hits.error?.message)
+    const vehicle = hits.data.find((h) => h.kind === "vehicle")
+    assert(vehicle, "the plate matches a vehicle")
+    assert.equal(vehicle.parent_kind, "person")
+    assert.equal(vehicle.parent_id, RED_MASK, "a vehicle result opens its owner")
+
+    const ownerless = await supabase.rpc("search_all", { term: "xr3nch", per_type: 6 })
+    assert(!ownerless.error, ownerless.error?.message)
+    const stray = ownerless.data.find((h) => h.kind === "vehicle")
+    assert(stray)
+    assert.equal(stray.parent_kind, null, "a vehicle with no owner has no parent")
+
+    const tagged = await supabase.rpc("search_all", { term: "recruiting", per_type: 6 })
+    assert(!tagged.error, tagged.error?.message)
+    const orgNote = tagged.data.find((h) => h.kind === "note")
+    assert(orgNote)
+    assert.equal(orgNote.parent_kind, "organization")
+
+    const general = await supabase.rpc("search_all", { term: "weapons drop", per_type: 6 })
+    assert(!general.error, general.error?.message)
+    const looseNote = general.data.find((h) => h.kind === "note")
+    assert(looseNote)
+    assert.equal(looseNote.parent_kind, null, "general intel belongs to nothing")
+
+    // The routing helper turns each of those into a real destination.
+    const toHit = (row: (typeof hits.data)[number]) => ({
+      kind: row.kind,
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      status: row.status,
+      score: row.score,
+      parentKind: row.parent_kind,
+      parentId: row.parent_id,
+    })
+    assert.equal(searchHitHref(toHit(vehicle), "46eek"), `/people/${RED_MASK}`)
+    assert(searchHitHref(toHit(stray), "xr3nch").startsWith("/people?q="))
+    assert(searchHitHref(toHit(orgNote), "recruiting").startsWith("/organizations/"))
+    assert.equal(searchHitHref(toHit(looseNote), "weapons drop"), "/intel?q=weapons%20drop")
+
+    const mixed = await supabase.rpc("search_all", { term: "grove", per_type: 6 })
+    assert(!mixed.error, mixed.error?.message)
+    const grouped = groupHits(mixed.data.map(toHit))
+    assert(grouped.length > 0, "results group by kind")
+    assert(grouped.every((g) => g.hits.length > 0), "no empty groups are rendered")
+    for (const group of grouped) {
+      for (const hit of group.hits) {
+        assert(searchHitHref(hit, "grove").startsWith("/"), "every result has a destination")
+      }
+    }
+  }
+
+  // --- uploaded evidence -----------------------------------------------------
+  {
+    const person = await supabase.from("people").insert({ description: "evidence check" }).select("id").single()
+    assert(!person.error, person.error?.message)
+    const pid = person.data.id
+
+    const upload = await supabase
+      .from("evidence")
+      .insert({ person_id: pid, storage_path: "people/x/abc.png", caption: "screenshot" })
+      .select("id, storage_path, url")
+      .single()
+    assert(!upload.error, upload.error?.message)
+    assert.equal(upload.data.url, null, "an upload has no link")
+
+    const both = await supabase
+      .from("evidence")
+      .insert({ person_id: pid, storage_path: "a.png", url: "https://example.com/a.png" })
+    assert.equal(both.error?.code, "23514", "evidence is a file or a link, never both")
+
+    // Storage is not part of this harness, so signing degrades to unsigned rows
+    // rather than failing the page.
+    const detail = await getPersonDetail(supabase, pid)
+    assert(detail)
+    assert.equal(detail.evidence.length, 1)
+    assert.equal(detail.evidence[0]?.storage_path, "people/x/abc.png")
+
+    await supabase.from("people").delete().eq("id", pid)
+  }
 
   // --- mutations, same shapes as the Server Actions -------------------------
   const created = await supabase
