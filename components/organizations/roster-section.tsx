@@ -22,10 +22,10 @@ export function RosterSection({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Roster</CardTitle>
+          <CardTitle>Medlemslista</CardTitle>
           {members.length > 0 ? (
             <p className="text-xs text-muted-foreground">
-              {members.length} known, {confirmed} confirmed
+              {members.length} kända, {confirmed} bekräftade
             </p>
           ) : null}
         </div>
@@ -37,7 +37,7 @@ export function RosterSection({
       <CardContent>
         {members.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No known members. Add anyone on file, including unidentified suspects.
+            Inga kända medlemmar. Lägg till vem som helst som är registrerad, även oidentifierade misstänkta.
           </p>
         ) : (
           <ul className="flex flex-col divide-y divide-border/60">
@@ -68,8 +68,8 @@ export function RosterSection({
                       )}
                       variant="ghost"
                       size="icon-sm"
-                      title={m.is_confirmed ? "Mark as suspected" : "Mark as confirmed"}
-                      successMessage={m.is_confirmed ? "Marked as suspected" : "Marked as confirmed"}
+                      title={m.is_confirmed ? "Markera som misstänkt" : "Markera som bekräftad"}
+                      successMessage={m.is_confirmed ? "Markerad som misstänkt" : "Markerad som bekräftad"}
                     >
                       {m.is_confirmed ? <UndoIcon /> : <CheckIcon />}
                     </ActionButton>
@@ -84,15 +84,15 @@ export function RosterSection({
                       action={removeMembership.bind(null, m.person.id, organizationId)}
                       variant="ghost"
                       size="icon-sm"
-                      title="Remove from this organization"
+                      title="Ta bort ur organisationen"
                       className="text-muted-foreground hover:text-destructive"
                       confirm={{
                         title: `Remove ${label} from the roster?`,
-                        description: "Their own record and notes are untouched.",
-                        actionLabel: "Remove",
+                        description: "Personens egen post och uppgifter påverkas inte.",
+                        actionLabel: "Ta bort",
                         destructive: true,
                       }}
-                      successMessage="Member removed"
+                      successMessage="Medlemmen borttagen"
                     >
                       <XIcon />
                     </ActionButton>

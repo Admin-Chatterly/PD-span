@@ -28,11 +28,11 @@ export default function AppError({
         <CardHeader>
           <div className="flex items-center gap-2 text-destructive">
             <TriangleAlertIcon className="size-5" />
-            <CardTitle>Something went wrong</CardTitle>
+            <CardTitle>Något gick fel</CardTitle>
           </div>
           <CardDescription>
-            This page could not be loaded. If the database has just been set up, check that every
-            file in <code className="font-mono text-xs">supabase/migrations/</code> has been run.
+            Sidan kunde inte läsas in. Om databasen just satts upp, kontrollera att varje fil i{" "}
+            <code className="font-mono text-xs">supabase/migrations/</code> har körts.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -40,13 +40,13 @@ export default function AppError({
             {/* A server error can carry raw database text, which is of no use to
                 an officer and needlessly detailed. The digest is what identifies
                 it in the logs; the message itself is kept for development. */}
-            {process.env.NODE_ENV === "production" ? "The server reported an error." : error.message}
-            {error.digest ? `\n\nReference: ${error.digest}` : ""}
+            {process.env.NODE_ENV === "production" ? "Servern rapporterade ett fel." : error.message}
+            {error.digest ? `\n\nReferens: ${error.digest}` : ""}
           </pre>
           <div className="flex gap-2">
-            <Button onClick={reset}>Try again</Button>
+            <Button onClick={reset}>Försök igen</Button>
             <Button asChild variant="secondary">
-              <Link href="/">Dashboard</Link>
+              <Link href="/">Översikt</Link>
             </Button>
           </div>
         </CardContent>

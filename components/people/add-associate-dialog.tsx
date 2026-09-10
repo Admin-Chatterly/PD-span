@@ -28,14 +28,14 @@ export function AddAssociateDialog({ personId, excludeIds }: { personId: string;
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <PlusIcon /> Link
+          <PlusIcon /> Koppla
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Link an associate</DialogTitle>
+          <DialogTitle>Koppla en kontakt</DialogTitle>
           <DialogDescription>
-            Person-to-person links, independent of shared organizations. Family, contacts, rivals.
+            Kopplingar mellan personer, oberoende av gemensamma organisationer. Familj, kontakter, rivaler.
           </DialogDescription>
         </DialogHeader>
         <AssociateForm personId={personId} excludeIds={excludeIds} onSaved={() => setOpen(false)} />
@@ -59,7 +59,7 @@ function AssociateForm({
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Associate linked")
+      toast.success("Kontakten kopplad")
       onSaved()
     }
   }, [state, onSaved])
@@ -73,12 +73,12 @@ function AssociateForm({
         <PersonPicker value={picked} onChange={setPicked} excludeIds={[personId, ...excludeIds]} />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="relationship">Relationship</Label>
+        <Label htmlFor="relationship">Relation</Label>
         <Input
           id="relationship"
           name="relationship"
           list={listId}
-          placeholder="family, frequent contact, rival…"
+          placeholder="familj, återkommande kontakt, rival…"
           maxLength={100}
         />
         <datalist id={listId}>
@@ -89,7 +89,7 @@ function AssociateForm({
       </div>
       <div className="flex items-center gap-2">
         <Checkbox id="assoc_confirmed" name="is_confirmed" />
-        <Label htmlFor="assoc_confirmed">Confirmed link</Label>
+        <Label htmlFor="assoc_confirmed">Bekräftad koppling</Label>
       </div>
       {state.error ? (
         <p role="alert" className="text-sm text-destructive">
@@ -99,7 +99,7 @@ function AssociateForm({
       <DialogFooter>
         <Button type="submit" disabled={pending || !picked}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          Link
+          Koppla
         </Button>
       </DialogFooter>
     </form>

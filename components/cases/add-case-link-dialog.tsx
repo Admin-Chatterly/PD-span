@@ -52,23 +52,23 @@ export function AddCaseLinkDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <PlusIcon /> Link
+          <PlusIcon /> Koppla
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {kind === "person" ? "Link a person to this case" : "Link an organization to this case"}
+            {kind === "person" ? "Koppla en person till ärendet" : "Koppla en organisation till ärendet"}
           </DialogTitle>
           <DialogDescription>
-            The role is how they figure in this investigation, not their rank on the street.
+            Rollen är hur de figurerar i just den här utredningen, inte deras rang på gatan.
           </DialogDescription>
         </DialogHeader>
         {kind === "organization" && available.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {organizations.length === 0
-              ? "No organizations exist yet. Create one from the Organizations page first."
-              : "Every organization on file is already linked to this case."}
+              ? "Det finns inga organisationer än. Skapa en på sidan Organisationer först."
+              : "Alla organisationer i registret är redan kopplade till ärendet."}
           </p>
         ) : (
           <LinkForm
@@ -103,7 +103,7 @@ function LinkForm({
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Linked to the case")
+      toast.success("Kopplad till ärendet")
       onSaved()
     }
   }, [state, onSaved])
@@ -121,10 +121,10 @@ function LinkForm({
         </>
       ) : (
         <div className="flex flex-col gap-2">
-          <Label htmlFor="case_org">Organization</Label>
+          <Label htmlFor="case_org">Organisation</Label>
           <Select name="organization_id" required>
             <SelectTrigger id="case_org">
-              <SelectValue placeholder="Pick one" />
+              <SelectValue placeholder="Välj en" />
             </SelectTrigger>
             <SelectContent>
               {organizations.map((o) => (
@@ -138,13 +138,13 @@ function LinkForm({
       )}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="case_role">Role in this case</Label>
+        <Label htmlFor="case_role">Roll i ärendet</Label>
         <Input
           id="case_role"
           name="role"
           list={listId}
           maxLength={100}
-          placeholder="suspect, witness, unidentified…"
+          placeholder="misstänkt, vittne, oidentifierad…"
         />
         <datalist id={listId}>
           {CASE_ROLE_SUGGESTIONS.map((r) => (
@@ -162,7 +162,7 @@ function LinkForm({
       <DialogFooter>
         <Button type="submit" disabled={pending || (kind === "person" && !person)}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          Link
+          Koppla
         </Button>
       </DialogFooter>
     </form>

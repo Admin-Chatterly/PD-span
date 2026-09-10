@@ -12,12 +12,12 @@ export function AssociatesSection({ personId, associates }: { personId: string; 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Associates</CardTitle>
+        <CardTitle>Kontakter</CardTitle>
         <AddAssociateDialog personId={personId} excludeIds={associates.map((a) => a.other.id)} />
       </CardHeader>
       <CardContent>
         {associates.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No known associates.</p>
+          <p className="text-sm text-muted-foreground">Inga kända kontakter.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border/60">
             {associates.map((a) => (
@@ -41,10 +41,10 @@ export function AssociatesSection({ personId, associates }: { personId: string; 
                   action={removeAssociate.bind(null, personId, a.other.id)}
                   variant="ghost"
                   size="icon-sm"
-                  title="Unlink"
+                  title="Koppla loss"
                   className="shrink-0 text-muted-foreground hover:text-destructive"
-                  confirm={{ title: `Unlink ${personLabel(a.other)}?`, actionLabel: "Unlink", destructive: true }}
-                  successMessage="Associate unlinked"
+                  confirm={{ title: `Koppla loss ${personLabel(a.other)}?`, actionLabel: "Koppla loss", destructive: true }}
+                  successMessage="Kontakten bortkopplad"
                 >
                   <XIcon />
                 </ActionButton>

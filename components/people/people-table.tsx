@@ -18,8 +18,8 @@ export function PeopleTable({ people, filtered }: { people: PersonSummary[]; fil
     return (
       <div className="rounded-lg border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
         {filtered
-          ? "No one matches that search."
-          : "Nobody on file yet. Use quick add above, or open a full form with Add person."}
+          ? "Ingen matchar den sökningen."
+          : "Ingen är registrerad ännu. Använd snabbregistreringen ovan, eller öppna hela formuläret med Ny person."}
       </div>
     )
   }
@@ -31,10 +31,10 @@ export function PeopleTable({ people, filtered }: { people: PersonSummary[]; fil
           <TableRow>
             <TableHead className="min-w-56">Person</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Organizations</TableHead>
-            <TableHead>Plates</TableHead>
-            <TableHead>Last note</TableHead>
-            <TableHead className="text-right">Added</TableHead>
+            <TableHead>Organisationer</TableHead>
+            <TableHead>Regnr</TableHead>
+            <TableHead>Senaste uppgiften</TableHead>
+            <TableHead className="text-right">Tillagd</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -75,7 +75,7 @@ export function PeopleTable({ people, filtered }: { people: PersonSummary[]; fil
                       <Link
                         key={o.id}
                         href={`/organizations/${o.id}`}
-                        title={o.is_confirmed ? "Confirmed member" : "Suspected member"}
+                        title={o.is_confirmed ? "Bekräftad medlem" : "Misstänkt medlem"}
                         className={cn(
                           "rounded-full border px-2 py-0.5 text-xs hover:bg-accent",
                           o.is_confirmed ? "border-border" : "border-dashed border-zinc-500/60 text-zinc-400"

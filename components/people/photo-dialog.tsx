@@ -19,7 +19,7 @@ import { STORAGE_BUCKET } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
 import { extensionFor } from "@/lib/upload"
 
-/** Uploads a mugshot straight to Storage, then points the record at it. */
+/** Laddar upp ett foto direkt till lagringen och pekar sedan posten på det. */
 export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto: boolean }) {
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -30,7 +30,7 @@ export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto
   async function upload() {
     setError(null)
     if (!file) {
-      setError("Paste, drop or choose an image first.")
+      setError("Klistra in, släpp eller välj en bild först.")
       return
     }
 
@@ -51,12 +51,12 @@ export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto
           setError(result.error)
           return
         }
-        toast.success("Photo updated")
+        toast.success("Fotot uppdaterat")
         setFile(null)
         setOpen(false)
       })
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The upload failed.")
+      setError(cause instanceof Error ? cause.message : "Uppladdningen misslyckades.")
     } finally {
       setUploading(false)
     }
@@ -69,7 +69,7 @@ export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto
         toast.error(result.error)
         return
       }
-      toast.success("Photo removed")
+      toast.success("Fotot borttaget")
       setOpen(false)
     })
   }
@@ -80,15 +80,15 @@ export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <CameraIcon /> {hasPhoto ? "Change photo" : "Add photo"}
+          <CameraIcon /> {hasPhoto ? "Byt foto" : "Lägg till foto"}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{hasPhoto ? "Change the photo" : "Add a photo"}</DialogTitle>
+          <DialogTitle>{hasPhoto ? "Byt foto" : "Lägg till foto"}</DialogTitle>
           <DialogDescription>
-            Paste a screenshot with win+shift+S, or drop a file. It goes into the private bucket
-            and is only ever served through a short-lived signed link.
+            Klistra in en skärmbild med win+shift+S, eller släpp en fil. Den hamnar i den privata
+            lagringen och visas bara via en kortlivad signerad länk.
           </DialogDescription>
         </DialogHeader>
 
@@ -109,14 +109,14 @@ export function PhotoDialog({ personId, hasPhoto }: { personId: string; hasPhoto
               disabled={busy}
               className="text-destructive hover:text-destructive"
             >
-              <Trash2Icon /> Remove
+              <Trash2Icon /> Ta bort
             </Button>
           ) : (
             <span />
           )}
           <Button type="button" onClick={upload} disabled={busy || !file}>
             {busy ? <LoaderCircleIcon className="animate-spin" /> : <CameraIcon />}
-            {uploading ? "Uploading…" : "Save photo"}
+            {uploading ? "Laddar upp…" : "Spara foto"}
           </Button>
         </DialogFooter>
       </DialogContent>

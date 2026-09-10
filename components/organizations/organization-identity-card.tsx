@@ -51,16 +51,16 @@ export function OrganizationIdentityCard({
               {organization.notes ? (
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{organization.notes}</p>
               ) : (
-                <p className="text-sm italic text-muted-foreground">No notes on the organization itself.</p>
+                <p className="text-sm italic text-muted-foreground">Inga anteckningar om själva organisationen.</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Opened <RelativeTime iso={organization.created_at} />
-                {createdBy ? ` by ${createdBy}` : ""} · updated{" "}
+                Öppnad <RelativeTime iso={organization.created_at} />
+                {createdBy ? ` av ${createdBy}` : ""} · ändrad{" "}
                 <RelativeTime iso={organization.updated_at} />
               </p>
             </div>
             <Button variant="outline" size="sm" className="shrink-0" onClick={() => setEditing(true)}>
-              <PencilIcon /> Edit
+              <PencilIcon /> Ändra
             </Button>
           </div>
         )}

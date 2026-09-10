@@ -1,8 +1,8 @@
 /**
- * Supabase reports sign-in failures with a machine-readable code. Collapsing
- * them all into "wrong password" hides the causes that actually happen during
- * setup: an account that was never confirmed, a project URL with a typo, a key
- * from a different project, or the email provider switched off.
+ * Supabase rapporterar varje misslyckad inloggning med en maskinläsbar kod. Att
+ * klumpa ihop dem till "fel lösenord" döljer de orsaker som faktiskt uppstår vid
+ * uppsättningen: ett konto som aldrig bekräftades, en felstavad projektadress,
+ * en nyckel från ett annat projekt, eller att e-postinloggning är avstängd.
  */
 export type SignInErrorLike = {
   name?: string
@@ -16,31 +16,31 @@ export function describeSignInError(error: SignInErrorLike): string {
 
   switch (error.code) {
     case "invalid_credentials":
-      return "Wrong email or password. If this officer has not been added yet, create them in Supabase under Authentication → Users."
+      return "Fel e-postadress eller lösenord. Om kollegan inte är upplagd ännu, skapa kontot i Supabase under Authentication → Users."
     case "email_not_confirmed":
-      return "That account exists but its email is not confirmed. In Supabase, open Authentication → Users and confirm it, or delete it and add it again with “Auto Confirm User” ticked."
+      return "Kontot finns men e-postadressen är inte bekräftad. Öppna Authentication → Users i Supabase och bekräfta det, eller ta bort det och lägg upp det igen med “Auto Confirm User” ikryssad."
     case "user_not_found":
-      return "No account with that email. Add the officer in Supabase under Authentication → Users."
+      return "Inget konto med den e-postadressen. Lägg upp kollegan i Supabase under Authentication → Users."
     case "user_banned":
-      return "That account is banned in Supabase."
+      return "Kontot är avstängt i Supabase."
     case "signup_disabled":
     case "email_provider_disabled":
     case "provider_disabled":
-      return "Email sign-in is switched off for this Supabase project. Enable the Email provider under Authentication → Sign In / Providers."
+      return "Inloggning med e-post är avstängd i det här Supabase-projektet. Slå på Email under Authentication → Sign In / Providers."
     case "over_request_rate_limit":
-      return "Too many attempts. Wait a minute, then try again."
+      return "För många försök. Vänta en minut och försök igen."
     case "validation_failed":
-      return `Supabase rejected the request: ${message}`
+      return `Supabase avvisade begäran: ${message}`
   }
 
-  // No HTTP status means the request never reached the project.
+  // Utan HTTP-status nådde begäran aldrig fram till projektet.
   if (error.name === "AuthRetryableFetchError" || error.status === undefined || error.status === 0) {
-    return "Could not reach Supabase. Check that the project URL is https://<ref>.supabase.co and that the project is not paused."
+    return "Kunde inte nå Supabase. Kontrollera att projektadressen är https://<ref>.supabase.co och att projektet inte är pausat."
   }
 
   if (error.status === 401 || /invalid api key|no api key/i.test(message)) {
-    return "Supabase rejected the API key. Check that the anon key belongs to this project."
+    return "Supabase avvisade API-nyckeln. Kontrollera att anon-nyckeln hör till det här projektet."
   }
 
-  return message ? `Sign-in failed: ${message}` : "Sign-in failed."
+  return message ? `Inloggningen misslyckades: ${message}` : "Inloggningen misslyckades."
 }

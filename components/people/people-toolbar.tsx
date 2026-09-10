@@ -15,10 +15,10 @@ import {
 import { PERSON_STATUSES, PERSON_STATUS_LABELS } from "@/lib/constants"
 
 const SORT_LABELS: Record<string, string> = {
-  updated: "Recently updated",
-  added: "Recently added",
-  name: "Name",
-  last_note: "Latest note",
+  updated: "Senast ändrade",
+  added: "Senast tillagda",
+  name: "Namn",
+  last_note: "Senaste uppgiften",
 }
 
 type Props = { q: string; status: string; sort: string; tag: string }
@@ -35,7 +35,7 @@ export function PeopleToolbar({ q, status, sort, tag }: Props) {
     if (values.q.trim()) params.set("q", values.q.trim())
     if (values.status) params.set("status", values.status)
     if (values.sort && values.sort !== "updated") params.set("sort", values.sort)
-    // Set from a tag badge elsewhere in the app; keep it across every other change.
+    // Satt från en tagg någon annanstans i appen; behåll den vid varje ändring.
     if (values.tag) params.set("tag", values.tag)
     const qs = params.toString()
     startTransition(() => router.replace(qs ? `/people?${qs}` : "/people"))
@@ -54,9 +54,9 @@ export function PeopleToolbar({ q, status, sort, tag }: Props) {
         <Input
           value={term}
           onChange={(e) => onTermChange(e.target.value)}
-          placeholder="Search name, alias, description or plate"
+          placeholder="Sök namn, alias, signalement eller regnr"
           className="pl-8 pr-8"
-          aria-label="Search people"
+          aria-label="Sök personer"
         />
         {pending ? (
           <LoaderCircleIcon className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -67,18 +67,18 @@ export function PeopleToolbar({ q, status, sort, tag }: Props) {
             size="icon"
             className="absolute top-1/2 right-0.5 size-8 -translate-y-1/2"
             onClick={() => onTermChange("")}
-            aria-label="Clear search"
+            aria-label="Rensa sökningen"
           >
             <XIcon />
           </Button>
         ) : null}
       </div>
       <Select value={status || "all"} onValueChange={(v) => navigate({ status: v === "all" ? "" : v })}>
-        <SelectTrigger className="sm:w-48" aria-label="Filter by status">
-          <SelectValue placeholder="All statuses" />
+        <SelectTrigger className="sm:w-48" aria-label="Filtrera på status">
+          <SelectValue placeholder="Alla statusar" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="all">Alla statusar</SelectItem>
           {PERSON_STATUSES.map((s) => (
             <SelectItem key={s} value={s}>
               {PERSON_STATUS_LABELS[s]}
@@ -87,7 +87,7 @@ export function PeopleToolbar({ q, status, sort, tag }: Props) {
         </SelectContent>
       </Select>
       <Select value={sort} onValueChange={(v) => navigate({ sort: v })}>
-        <SelectTrigger className="sm:w-44" aria-label="Sort">
+        <SelectTrigger className="sm:w-44" aria-label="Sortering">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -18,13 +18,13 @@ import {
 import { Button } from "@/components/ui/button"
 
 type Props = Omit<ComponentProps<typeof Button>, "onClick" | "type"> & {
-  /** A server action (or a bound one) that reports success or an error message. */
+  /** En server-action som rapporterar lyckat resultat eller ett felmeddelande. */
   action: () => Promise<ActionResult | void>
   successMessage?: string
   confirm?: { title: string; description?: string; actionLabel?: string; destructive?: boolean }
 }
 
-/** Runs a server action from a button, with toast feedback and an optional confirmation step. */
+/** Kör en server-action från en knapp, med återkoppling och valfri bekräftelse. */
 export function ActionButton({ action, successMessage, confirm, children, disabled, ...button }: Props) {
   const [pending, startTransition] = useTransition()
 
@@ -69,12 +69,12 @@ export function ActionButton({ action, successMessage, confirm, children, disabl
           ) : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Avbryt</AlertDialogCancel>
           <AlertDialogAction
             onClick={run}
             className={confirm.destructive ? "bg-destructive text-white hover:bg-destructive/90" : undefined}
           >
-            {confirm.actionLabel ?? "Confirm"}
+            {confirm.actionLabel ?? "Bekräfta"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

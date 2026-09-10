@@ -9,10 +9,10 @@ export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "i
 /** Returns a message to show the officer, or null when the file is fine. */
 export function validateImage(file: File): string | null {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-    return "That file type is not accepted. Use JPEG, PNG, WebP or GIF."
+    return "Den filtypen tas inte emot. Använd JPEG, PNG, WebP eller GIF."
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return `That image is ${(file.size / 1024 / 1024).toFixed(1)} MB. The limit is 10 MB.`
+    return `Bilden är ${(file.size / 1024 / 1024).toFixed(1)} MB. Gränsen är 10 MB.`
   }
   return null
 }

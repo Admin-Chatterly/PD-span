@@ -38,15 +38,15 @@ export function EditMembershipDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon-sm" title={`Edit ${personLabel}'s membership`}>
+        <Button variant="ghost" size="icon-sm" title={`Ändra medlemskapet för ${personLabel}`}>
           <PencilIcon />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{personLabel} in this organization</DialogTitle>
+          <DialogTitle>{personLabel} i den här organisationen</DialogTitle>
           <DialogDescription>
-            Changing this here also updates it on the person&rsquo;s own page.
+            Ändringen syns även på personens egen sida.
           </DialogDescription>
         </DialogHeader>
         <MembershipForm
@@ -79,7 +79,7 @@ function MembershipForm({
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Membership updated")
+      toast.success("Medlemskapet uppdaterat")
       onSaved()
     }
   }, [state, onSaved])
@@ -90,13 +90,13 @@ function MembershipForm({
       <input type="hidden" name="person_id" value={personId} />
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="edit_role">Role</Label>
+        <Label htmlFor="edit_role">Roll</Label>
         <Input
           id="edit_role"
           name="role"
           list={listId}
           defaultValue={role ?? ""}
-          placeholder="enforcer, dealer, leader…"
+          placeholder="torped, langare, ledare…"
           maxLength={100}
           autoFocus
         />
@@ -109,7 +109,7 @@ function MembershipForm({
 
       <div className="flex items-center gap-2">
         <Checkbox id="edit_confirmed" name="is_confirmed" defaultChecked={isConfirmed} />
-        <Label htmlFor="edit_confirmed">Confirmed member</Label>
+        <Label htmlFor="edit_confirmed">Bekräftad medlem</Label>
       </div>
 
       {state.error ? (
@@ -121,7 +121,7 @@ function MembershipForm({
       <DialogFooter>
         <Button type="submit" disabled={pending}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          Save
+          Spara
         </Button>
       </DialogFooter>
     </form>

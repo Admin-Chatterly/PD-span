@@ -8,7 +8,7 @@ import { getBoardGraph, listBoardScopes, type BoardScope } from "@/lib/data/boar
 import { isUuid } from "@/lib/data/filters"
 import { createClient } from "@/lib/supabase/server"
 
-export const metadata = { title: "Board" }
+export const metadata = { title: "Tavlan" }
 
 function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "")
@@ -42,11 +42,11 @@ export default async function BoardPage(props: PageProps<"/board">) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Board</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Tavlan</h1>
           <p className="text-sm text-muted-foreground">
             {result.ok
-              ? `${nodeCount} node${nodeCount === 1 ? "" : "s"}, ${edgeCount} link${edgeCount === 1 ? "" : "s"}. Click anything to open its file.`
-              : "The graph could not be loaded."}
+              ? `${nodeCount} ${nodeCount === 1 ? "nod" : "noder"}, ${edgeCount} ${edgeCount === 1 ? "koppling" : "kopplingar"}. Klicka på något för att öppna dess akt.`
+              : "Grafen kunde inte laddas."}
           </p>
         </div>
         <BoardScopePicker value={value} options={options} />
@@ -58,11 +58,11 @@ export default async function BoardPage(props: PageProps<"/board">) {
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border py-24 text-center">
           <p className="max-w-md text-sm text-muted-foreground">
             {scope.kind === "all"
-              ? "Nothing to plot yet. The board draws people and organizations once they are linked by memberships or associates."
-              : "Nothing is linked to this yet. Add members or link people to the case, and they will appear here."}
+              ? "Inget att rita upp än. Tavlan ritar personer och organisationer så snart de knyts ihop av medlemskap eller kontakter."
+              : "Ingenting är kopplat till det här än. Lägg till medlemmar eller koppla personer till ärendet, så dyker de upp här."}
           </p>
           <Button asChild variant="secondary" size="sm">
-            <Link href="/people">Open people</Link>
+            <Link href="/people">Öppna personer</Link>
           </Button>
         </div>
       ) : (
@@ -72,8 +72,8 @@ export default async function BoardPage(props: PageProps<"/board">) {
           <BoardGraphView key={value} graph={result.graph} />
           {result.graph.truncated ? (
             <p className="text-center text-xs text-muted-foreground">
-              Showing the most recently updated {result.graph.people.length} people. Pick a case or
-              an organization to see a readable slice.
+              Visar de {result.graph.people.length} senast uppdaterade personerna. Välj ett ärende
+              eller en organisation för att se en läsbar del.
             </p>
           ) : null}
         </>

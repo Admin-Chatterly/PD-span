@@ -19,14 +19,14 @@ export function NewOrganizationDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusIcon /> New organization
+          <PlusIcon /> Ny organisation
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New organization</DialogTitle>
+          <DialogTitle>Ny organisation</DialogTitle>
           <DialogDescription>
-            Gang, crew, cartel or business. Only the name is required.
+            Gäng, liga, kartell eller företag. Bara namnet krävs.
           </DialogDescription>
         </DialogHeader>
         <OrganizationForm mode="create" />

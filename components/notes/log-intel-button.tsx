@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/dialog"
 
 /**
- * Intel arrives mid-shift, rarely while the right page is open, so the composer
- * is reachable from anywhere. The pickers are fetched when the dialog opens so
- * the header costs nothing on pages that never use it.
+ * Uppgifter kommer mitt i passet, sällan medan rätt sida är öppen, så rutan går
+ * att nå överallt. Väljarna hämtas först när dialogen öppnas, så sidhuvudet
+ * kostar ingenting på sidor som aldrig använder den.
  */
 export function LogIntelButton() {
   const [open, setOpen] = useState(false)
@@ -42,28 +42,28 @@ export function LogIntelButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="secondary" title="Log intel">
+        <Button size="sm" variant="secondary" title="Logga uppgift">
           <NotebookPenIcon />
-          <span className="hidden sm:inline">Log intel</span>
+          <span className="hidden sm:inline">Logga uppgift</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Log intel</DialogTitle>
+          <DialogTitle>Logga uppgift</DialogTitle>
           <DialogDescription>
-            Attach it to whoever it is about, or to nobody if you do not know yet.
+            Koppla den till den det gäller, eller till ingen alls om du inte vet ännu.
           </DialogDescription>
         </DialogHeader>
         {failed ? (
           <p role="alert" className="text-sm text-destructive">
-            Could not load the people and organizations to attach to. Reload and try again.
+            Kunde inte hämta personer och organisationer att koppla till. Ladda om och försök igen.
           </p>
         ) : options ? (
           <NoteComposer
             tagSuggestions={options.tagSuggestions}
             targetOptions={{ organizations: options.organizations, cases: options.cases }}
             onSaved={() => setOpen(false)}
-            submitLabel="Log intel"
+            submitLabel="Logga uppgift"
           />
         ) : (
           <div className="flex items-center justify-center py-8 text-muted-foreground">

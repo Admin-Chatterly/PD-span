@@ -26,15 +26,15 @@ export function AddEvidenceLinkDialog({ target }: { target: EvidenceTarget }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <LinkIcon /> Add link
+          <LinkIcon /> Lägg till länk
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Attach a link as evidence</DialogTitle>
+          <DialogTitle>Bifoga en länk som bevis</DialogTitle>
           <DialogDescription>
-            Medal.tv clips, YouTube and Streamable videos play inline. Direct image links show the
-            image. Anything else is kept as a link.
+            Klipp från Medal.tv samt videor från YouTube och Streamable spelas upp direkt här.
+            Direktlänkar till bilder visar bilden. Allt annat sparas som en länk.
           </DialogDescription>
         </DialogHeader>
         <LinkForm target={target} onSaved={() => setOpen(false)} />
@@ -48,7 +48,7 @@ function LinkForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () => 
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Evidence added")
+      toast.success("Beviset tillagt")
       onSaved()
     }
   }, [state, onSaved])
@@ -61,7 +61,7 @@ function LinkForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () => 
       ) : null}
       {target.caseId ? <input type="hidden" name="case_id" value={target.caseId} /> : null}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="evidence_url">Link</Label>
+        <Label htmlFor="evidence_url">Länk</Label>
         <Input
           id="evidence_url"
           name="url"
@@ -73,12 +73,12 @@ function LinkForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () => 
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="evidence_caption">Caption</Label>
+        <Label htmlFor="evidence_caption">Bildtext</Label>
         <Input
           id="evidence_caption"
           name="caption"
           maxLength={500}
-          placeholder="What it shows, when, where"
+          placeholder="Vad det visar, när, var"
         />
       </div>
       {state.error ? (
@@ -89,7 +89,7 @@ function LinkForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () => 
       <DialogFooter>
         <Button type="submit" disabled={pending}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          Attach
+          Bifoga
         </Button>
       </DialogFooter>
     </form>

@@ -19,14 +19,14 @@ export function NewCaseDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusIcon /> New case
+          <PlusIcon /> Nytt ärende
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New case</DialogTitle>
+          <DialogTitle>Nytt ärende</DialogTitle>
           <DialogDescription>
-            An investigation that groups the people and organizations involved.
+            En utredning som samlar de personer och organisationer som är inblandade.
           </DialogDescription>
         </DialogHeader>
         <CaseForm mode="create" />

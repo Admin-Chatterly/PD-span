@@ -46,7 +46,7 @@ export function DangerZone({ person, counts }: { person: Person; counts: Counts 
   return (
     <Card className="border-destructive/30">
       <CardHeader>
-        <CardTitle className="text-destructive">Record actions</CardTitle>
+        <CardTitle className="text-destructive">Åtgärder på posten</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         <MergeDialog person={person} />
@@ -72,7 +72,7 @@ function MergeDialog({ person }: { person: Person }) {
     startTransition(async () => {
       const result = await mergePeople(keepId, dropId)
       if (result && !result.ok) toast.error(result.error)
-      else toast.success("Records merged")
+      else toast.success("Posterna sammanslagna")
     })
   }
 
@@ -86,26 +86,26 @@ function MergeDialog({ person }: { person: Person }) {
     >
       <DialogTrigger asChild>
         <Button variant="outline" className="justify-start">
-          <GitMergeIcon /> Merge with another record
+          <GitMergeIcon /> Slå ihop med en annan post
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Merge two records</DialogTitle>
+          <DialogTitle>Slå ihop två poster</DialogTitle>
           <DialogDescription>
-            Use this when an unknown turns out to be someone already on file. Notes, vehicles,
-            memberships, associates, case links and evidence all move to the record you keep; blanks on
-            it are filled from the other one, and the other one is deleted.
+            Använd detta när en okänd visar sig vara någon som redan är registrerad. Uppgifter, fordon,
+            medlemskap, kontakter, ärendekopplingar och bevis flyttas till posten du behåller; tomma fält
+            på den fylls från den andra, och den andra tas bort.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label>The other record</Label>
+            <Label>Den andra posten</Label>
             <PersonPicker value={other} onChange={setOther} excludeIds={[person.id]} />
           </div>
           {other ? (
             <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-sm font-medium">Which record survives?</legend>
+              <legend className="mb-1 text-sm font-medium">Vilken post ska behållas?</legend>
               <label className="flex cursor-pointer items-center gap-2 text-sm">
                 <input
                   type="radio"
@@ -114,7 +114,7 @@ function MergeDialog({ person }: { person: Person }) {
                   onChange={() => setKeep("this")}
                   className="accent-primary"
                 />
-                Keep <strong>{personLabel(person)}</strong> (this page)
+                Behåll <strong>{personLabel(person)}</strong> (den här sidan)
               </label>
               <label className="flex cursor-pointer items-center gap-2 text-sm">
                 <input
@@ -124,13 +124,13 @@ function MergeDialog({ person }: { person: Person }) {
                   onChange={() => setKeep("other")}
                   className="accent-primary"
                 />
-                Keep <strong>{personLabel(other)}</strong>
+                Behåll <strong>{personLabel(other)}</strong>
               </label>
               {keepRecord && dropRecord ? (
                 <p className="text-xs text-muted-foreground">
-                  Everything on <strong>{personLabel(dropRecord)}</strong> moves to{" "}
-                  <strong>{personLabel(keepRecord)}</strong>, then{" "}
-                  <strong>{personLabel(dropRecord)}</strong> is deleted.
+                  Allt på <strong>{personLabel(dropRecord)}</strong> flyttas till{" "}
+                  <strong>{personLabel(keepRecord)}</strong>, sedan tas{" "}
+                  <strong>{personLabel(dropRecord)}</strong> bort.
                 </p>
               ) : null}
             </fieldset>
@@ -139,7 +139,7 @@ function MergeDialog({ person }: { person: Person }) {
         <DialogFooter>
           <Button type="button" onClick={run} disabled={!other || pending}>
             {pending ? <LoaderCircleIcon className="animate-spin" /> : <GitMergeIcon />}
-            Merge
+            Slå ihop
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -151,11 +151,11 @@ function DeleteDialog({ person, counts }: { person: Person; counts: Counts }) {
   const [pending, startTransition] = useTransition()
 
   const parts = [
-    counts.notes > 0 ? `${counts.notes} note${counts.notes === 1 ? "" : "s"}` : null,
-    counts.memberships > 0 ? `${counts.memberships} membership${counts.memberships === 1 ? "" : "s"}` : null,
-    counts.associates > 0 ? `${counts.associates} associate link${counts.associates === 1 ? "" : "s"}` : null,
-    counts.caseLinks > 0 ? `${counts.caseLinks} case link${counts.caseLinks === 1 ? "" : "s"}` : null,
-    counts.evidence > 0 ? `${counts.evidence} evidence item${counts.evidence === 1 ? "" : "s"}` : null,
+    counts.notes > 0 ? `${counts.notes} ${counts.notes === 1 ? "uppgift" : "uppgifter"}` : null,
+    counts.memberships > 0 ? `${counts.memberships} ${counts.memberships === 1 ? "medlemskap" : "medlemskap"}` : null,
+    counts.associates > 0 ? `${counts.associates} ${counts.associates === 1 ? "kontaktkoppling" : "kontaktkopplingar"}` : null,
+    counts.caseLinks > 0 ? `${counts.caseLinks} ${counts.caseLinks === 1 ? "ärendekoppling" : "ärendekopplingar"}` : null,
+    counts.evidence > 0 ? `${counts.evidence} ${counts.evidence === 1 ? "bevis" : "bevis"}` : null,
   ].filter(Boolean)
 
   function run() {
@@ -169,31 +169,31 @@ function DeleteDialog({ person, counts }: { person: Person; counts: Counts }) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline" className="justify-start text-destructive hover:text-destructive">
-          <Trash2Icon /> Delete this record
+          <Trash2Icon /> Ta bort den här posten
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {personLabel(person)}?</AlertDialogTitle>
+          <AlertDialogTitle>Ta bort {personLabel(person)}?</AlertDialogTitle>
           <AlertDialogDescription>
             {parts.length > 0
-              ? `This also deletes ${parts.join(", ")}. `
-              : "Nothing else is attached to this record. "}
+              ? `Det tar även bort ${parts.join(", ")}. `
+              : "Inget annat är kopplat till den här posten. "}
             {counts.vehicles > 0
-              ? `${counts.vehicles} vehicle${counts.vehicles === 1 ? " stays" : "s stay"} on file without an owner. `
+              ? `${counts.vehicles} ${counts.vehicles === 1 ? "fordon blir kvar" : "fordon blir kvar"} utan ägare. `
               : ""}
-            If this is a duplicate, merge instead so nothing is lost.
+            Om det är en dubblett, slå ihop i stället så att inget går förlorat.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Avbryt</AlertDialogCancel>
           <AlertDialogAction
             onClick={run}
             disabled={pending}
             className="bg-destructive text-white hover:bg-destructive/90"
           >
             {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-            Delete
+            Ta bort
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -33,8 +33,9 @@ const KIND_ICONS: Record<string, typeof UserIcon> = {
 }
 
 /**
- * One input over everything: name, alias, description, plate, territory, note
- * body and tags. Opens on ctrl+K or cmd+K because it is used mid-shift.
+ * Ett fält över allt: namn, alias, signalement, registreringsnummer,
+ * territorium, anteckningstext och taggar. Öppnas med ctrl+K eller cmd+K
+ * eftersom den används mitt i passet.
  */
 export function GlobalSearch() {
   const router = useRouter()
@@ -83,10 +84,10 @@ export function GlobalSearch() {
         size="sm"
         onClick={() => setOpen(true)}
         className="gap-2 text-muted-foreground"
-        title="Search everything (ctrl+K)"
+        title="Sök i allt (ctrl+K)"
       >
         <SearchIcon />
-        <span className="hidden lg:inline">Search</span>
+        <span className="hidden lg:inline">Sök</span>
         <kbd className="hidden rounded border border-border px-1 font-mono text-[10px] lg:inline">
           ⌘K
         </kbd>
@@ -95,27 +96,27 @@ export function GlobalSearch() {
       <CommandDialog
         open={open}
         onOpenChange={setOpen}
-        title="Search"
-        description="Search people, vehicles, organizations, intel and cases"
-        // The database already ranked and capped these; cmdk re-filtering them
-        // against the raw input would hide matches it cannot see, such as a
-        // plate found by its normalised form.
+        title="Sök"
+        description="Sök bland personer, fordon, organisationer, underrättelser och ärenden"
+        // Databasen har redan rangordnat och begränsat träffarna; om cmdk
+        // filtrerade om dem mot råtexten skulle den dölja träffar den inte ser,
+        // som ett registreringsnummer som hittats via sin normaliserade form.
         commandProps={{ shouldFilter: false }}
       >
         <CommandInput
           value={term}
           onValueChange={setTerm}
-          placeholder="Name, alias, description, plate, tag…"
+          placeholder="Namn, alias, signalement, regnr, tagg…"
         />
         <CommandList>
           {short ? (
-            <CommandEmpty>Type at least two characters.</CommandEmpty>
+            <CommandEmpty>Skriv minst två tecken.</CommandEmpty>
           ) : pending && groups.length === 0 ? (
             <div className="flex items-center justify-center py-6 text-muted-foreground">
               <LoaderCircleIcon className="size-4 animate-spin" />
             </div>
           ) : (
-            <CommandEmpty>Nothing matches that.</CommandEmpty>
+            <CommandEmpty>Inget matchar det.</CommandEmpty>
           )}
           {groups.map((group) => {
             const Icon = KIND_ICONS[group.kind] ?? SearchIcon

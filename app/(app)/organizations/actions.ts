@@ -11,7 +11,7 @@ import { revalidateOrganization } from "@/lib/revalidate"
 import { createClient } from "@/lib/supabase/server"
 
 const organizationSchema = z.object({
-  name: z.string().trim().min(1, "Give the organization a name.").max(200),
+  name: z.string().trim().min(1, "Ge organisationen ett namn.").max(200),
   type: z.enum(ORGANIZATION_TYPES).optional(),
   territory: optionalText,
   status: z.enum(ORGANIZATION_STATUSES).default("active"),
@@ -48,7 +48,7 @@ export async function createOrganization(_prev: FormState, formData: FormData): 
 export async function updateOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
   const id = uuid.safeParse(formData.get("id"))
-  if (!id.success) return { error: "Missing organization id." }
+  if (!id.success) return { error: "Organisations-id saknas." }
   const parsed = parseOrganization(formData)
   if (!parsed.success) return { error: firstIssue(parsed.error) }
 
@@ -66,7 +66,7 @@ export async function updateOrganization(_prev: FormState, formData: FormData): 
 export async function deleteOrganization(organizationId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(organizationId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
+  if (!id.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   // Members keep their own records, and notes are detached rather than deleted

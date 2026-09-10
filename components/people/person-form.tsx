@@ -47,31 +47,31 @@ export function PersonForm(props: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">Namn</Label>
           <Input
             id="name"
             name="name"
             defaultValue={person?.name ?? ""}
-            placeholder="Leave empty if unknown"
+            placeholder="Lämna tomt om det är okänt"
             maxLength={200}
             autoFocus={props.mode === "create"}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="alias">Alias / street name</Label>
+          <Label htmlFor="alias">Alias / gatunamn</Label>
           <Input id="alias" name="alias" defaultValue={person?.alias ?? ""} maxLength={200} />
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">Signalement</Label>
         <Textarea
           id="description"
           name="description"
           rows={4}
           maxLength={4000}
           defaultValue={person?.description ?? ""}
-          placeholder="Build, clothing, distinguishing marks, vehicle, where seen…"
+          placeholder="Kroppsbyggnad, kläder, kännetecken, fordon, var personen setts…"
         />
       </div>
 
@@ -100,11 +100,11 @@ export function PersonForm(props: Props) {
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          {props.mode === "create" ? "Create file" : "Save"}
+          {props.mode === "create" ? "Skapa akt" : "Spara"}
         </Button>
         {props.mode === "edit" ? (
           <Button type="button" variant="ghost" onClick={props.onCancel} disabled={pending}>
-            Cancel
+            Avbryt
           </Button>
         ) : null}
       </div>

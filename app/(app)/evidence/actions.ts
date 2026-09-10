@@ -22,7 +22,7 @@ const linkSchema = z.object({
     .string()
     .trim()
     .max(2000)
-    .refine((v) => /^https?:\/\/\S+$/i.test(v), "Paste a full http(s) link."),
+    .refine((v) => /^https?:\/\/\S+$/i.test(v), "Klistra in en fullständig http(s)-länk."),
   caption: optionalText,
 })
 
@@ -34,7 +34,7 @@ const fileSchema = z.object({
     .trim()
     .min(1)
     .max(500)
-    .refine(isSafeStoragePath, "That upload path is not one this app writes."),
+    .refine(isSafeStoragePath, "Den uppladdningssökvägen är inte en som appen skriver till."),
   caption: optionalText,
 })
 
@@ -60,8 +60,8 @@ export async function addEvidenceLink(_prev: FormState, formData: FormData): Pro
   const parsed = linkSchema.safeParse(
     readFields(formData, ["person_id", "organization_id", "case_id", "url", "caption"])
   )
-  if (!parsed.success) return { error: firstIssue(parsed.error, "Invalid link.") }
-  if (!hasTarget(parsed.data)) return { error: "Nothing to attach the evidence to." }
+  if (!parsed.success) return { error: firstIssue(parsed.error, "Ogiltig länk.") }
+  if (!hasTarget(parsed.data)) return { error: "Det finns inget att bifoga beviset till." }
 
   const supabase = await createClient()
   const { error } = await supabase.from("evidence").insert({
@@ -87,8 +87,8 @@ export async function addEvidenceFile(_prev: FormState, formData: FormData): Pro
   const parsed = fileSchema.safeParse(
     readFields(formData, ["person_id", "organization_id", "case_id", "storage_path", "caption"])
   )
-  if (!parsed.success) return { error: firstIssue(parsed.error, "Invalid upload.") }
-  if (!hasTarget(parsed.data)) return { error: "Nothing to attach the evidence to." }
+  if (!parsed.success) return { error: firstIssue(parsed.error, "Ogiltig uppladdning.") }
+  if (!hasTarget(parsed.data)) return { error: "Det finns inget att bifoga beviset till." }
 
   const supabase = await createClient()
   const { error } = await supabase.from("evidence").insert({
@@ -111,7 +111,7 @@ export async function addEvidenceFile(_prev: FormState, formData: FormData): Pro
 export async function deleteEvidence(evidenceId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(evidenceId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
+  if (!id.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   const { data: row } = await supabase

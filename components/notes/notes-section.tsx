@@ -5,12 +5,12 @@ import type { NoteRow } from "@/lib/data/notes"
 
 export type { NotesTarget }
 
-/** The intel log on a person, organization or case page: composer, then feed. */
+/** Underrättelseloggen på en person-, organisations- eller ärendesida. */
 export function NotesSection({
   target,
   notes,
   tagSuggestions,
-  emptyText = "Nothing logged yet.",
+  emptyText = "Inget loggat ännu.",
 }: {
   target: NotesTarget
   notes: NoteRow[]
@@ -20,7 +20,7 @@ export function NotesSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Intel log</CardTitle>
+        <CardTitle>Underrättelselogg</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         <NoteComposer target={target} tagSuggestions={tagSuggestions} />

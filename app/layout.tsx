@@ -18,14 +18,14 @@ export const metadata: Metadata = {
     default: "PD-span",
     template: "%s · PD-span",
   },
-  description: "Intelligence board: people, organizations, notes, and the links between them.",
+  description: "Underrättelsetavla: personer, organisationer, uppgifter och kopplingarna mellan dem.",
   robots: { index: false, follow: false },
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="sv"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">

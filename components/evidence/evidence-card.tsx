@@ -32,14 +32,14 @@ export function EvidenceCard({ item }: { item: EvidenceRow }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imageSrc}
-          alt={item.caption ?? "Evidence image"}
+          alt={item.caption ?? "Bevisbild"}
           className="max-h-80 w-full rounded object-contain"
           loading="lazy"
         />
       ) : null}
       {item.storage_path && !item.signedUrl ? (
         <p className="rounded bg-muted p-3 text-xs text-muted-foreground">
-          This file could not be signed for viewing. It is still in the bucket.
+          Filen kunde inte signeras för visning. Den ligger kvar i lagringen.
         </p>
       ) : null}
       <div className="flex items-start justify-between gap-2">
@@ -57,21 +57,21 @@ export function EvidenceCard({ item }: { item: EvidenceRow }) {
             </a>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <FileIcon className="size-3" /> Uploaded file
+              <FileIcon className="size-3" /> Uppladdad fil
             </span>
           )}
           <p className="text-xs text-muted-foreground">
-            {item.author?.callsign ?? "unknown officer"} · <RelativeTime iso={item.created_at} />
+            {item.author?.callsign ?? "okänd polis"} · <RelativeTime iso={item.created_at} />
           </p>
         </div>
         <ActionButton
           action={deleteEvidence.bind(null, item.id)}
           variant="ghost"
           size="icon-sm"
-          title="Remove"
+          title="Ta bort"
           className="shrink-0 text-muted-foreground hover:text-destructive"
-          confirm={{ title: "Remove this evidence?", actionLabel: "Remove", destructive: true }}
-          successMessage="Evidence removed"
+          confirm={{ title: "Ta bort beviset?", actionLabel: "Ta bort", destructive: true }}
+          successMessage="Beviset borttaget"
         >
           <Trash2Icon />
         </ActionButton>

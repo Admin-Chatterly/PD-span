@@ -14,7 +14,7 @@ import {
 import { listCases } from "@/lib/data/cases"
 import { createClient } from "@/lib/supabase/server"
 
-export const metadata = { title: "Cases" }
+export const metadata = { title: "Ärenden" }
 
 export default async function CasesPage() {
   const supabase = await createClient()
@@ -24,8 +24,8 @@ export default async function CasesPage() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Cases</h1>
-          {result.ok ? <p className="text-sm text-muted-foreground">{result.cases.length} on file</p> : null}
+          <h1 className="text-2xl font-semibold tracking-tight">Ärenden</h1>
+          {result.ok ? <p className="text-sm text-muted-foreground">{result.cases.length} registrerade</p> : null}
         </div>
         <NewCaseDialog />
       </div>
@@ -34,18 +34,18 @@ export default async function CasesPage() {
         <SetupHelp error={result.error} />
       ) : result.cases.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
-          No cases yet. Open one to group the people and organizations of an investigation.
+          Inga ärenden än. Öppna ett för att samla personerna och organisationerna i en utredning.
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-56">Case</TableHead>
+                <TableHead className="min-w-56">Ärende</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>People</TableHead>
-                <TableHead>Organizations</TableHead>
-                <TableHead className="text-right">Last note</TableHead>
+                <TableHead>Personer</TableHead>
+                <TableHead>Organisationer</TableHead>
+                <TableHead className="text-right">Senaste uppgiften</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

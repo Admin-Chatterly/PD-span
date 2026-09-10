@@ -35,14 +35,14 @@ export function BoardScopePicker({
   return (
     <div className="flex items-center gap-2">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-72" aria-label="What to show on the board">
+        <SelectTrigger className="w-72" aria-label="Vad som visas på tavlan">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Everyone on file</SelectItem>
+          <SelectItem value="all">Alla i registret</SelectItem>
           {options.cases.length > 0 ? (
             <SelectGroup>
-              <SelectLabel>Cases</SelectLabel>
+              <SelectLabel>Ärenden</SelectLabel>
               {options.cases.map((c) => (
                 <SelectItem key={c.id} value={`case:${c.id}`}>
                   {c.title}
@@ -52,7 +52,7 @@ export function BoardScopePicker({
           ) : null}
           {options.organizations.length > 0 ? (
             <SelectGroup>
-              <SelectLabel>Organizations</SelectLabel>
+              <SelectLabel>Organisationer</SelectLabel>
               {options.organizations.map((o) => (
                 <SelectItem key={o.id} value={`organization:${o.id}`}>
                   {o.name}

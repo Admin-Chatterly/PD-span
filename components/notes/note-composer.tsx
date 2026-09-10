@@ -31,12 +31,12 @@ const initialState: FormState = {}
 export type NoteTarget = { personId?: string; organizationId?: string; caseId?: string }
 
 type Props = {
-  /** Fixed targets, used on a detail page where the note belongs to that record. */
+  /** Fasta kopplingar, för en detaljsida där uppgiften hör till just den posten. */
   target?: NoteTarget
   tagSuggestions: string[]
   /**
-   * When present the composer lets the officer choose the targets instead, and
-   * choosing none is valid: that is general intel.
+   * När den finns får man välja kopplingarna själv, och att inte välja någon är
+   * giltigt: det är en allmän uppgift.
    */
   targetOptions?: NoteTargetOptions
   onSaved?: () => void
@@ -44,8 +44,9 @@ type Props = {
 }
 
 /**
- * Logs a note against a person, an organization, a case, any combination, or
- * nothing at all. Remounts after each save so the form comes back empty.
+ * Loggar en uppgift på en person, en organisation, ett ärende, valfri
+ * kombination, eller ingenting alls. Formuläret monteras om efter varje
+ * sparning så att det kommer tillbaka tomt.
  */
 export function NoteComposer(props: Props) {
   const [round, setRound] = useState(0)
@@ -66,7 +67,7 @@ function ComposerForm({
   tagSuggestions,
   targetOptions,
   onSaved,
-  submitLabel = "Log note",
+  submitLabel = "Logga uppgift",
 }: Props) {
   const [state, formAction, pending] = useActionState(addNote, initialState)
   const [person, setPerson] = useState<PersonPick | null>(null)
@@ -74,7 +75,7 @@ function ComposerForm({
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Note logged")
+      toast.success("Uppgiften loggad")
       onSaved?.()
     }
   }, [state, onSaved])
@@ -84,23 +85,23 @@ function ComposerForm({
       {targetOptions ? (
         <div className="flex flex-col gap-3 rounded-md border border-dashed border-border p-3">
           <p className="text-xs text-muted-foreground">
-            Attach this to whatever is known. Leave it all empty for general intel you have not
-            placed yet.
+            Koppla den till det som är känt. Lämna allt tomt för en allmän uppgift du ännu inte
+            placerat.
           </p>
           <input type="hidden" name="person_id" value={person?.id ?? ""} />
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Person</Label>
-            <PersonPicker value={person} onChange={setPerson} placeholder="Search anyone on file" />
+            <PersonPicker value={person} onChange={setPerson} placeholder="Sök bland registrerade personer" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground">Organization</Label>
+              <Label className="text-xs text-muted-foreground">Organisation</Label>
               <Select name="organization_id" defaultValue="none">
                 <SelectTrigger size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">Ingen</SelectItem>
                   {targetOptions.organizations.map((o) => (
                     <SelectItem key={o.id} value={o.id}>
                       {o.name}
@@ -110,13 +111,13 @@ function ComposerForm({
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs text-muted-foreground">Case</Label>
+              <Label className="text-xs text-muted-foreground">Ärende</Label>
               <Select name="case_id" defaultValue="none">
                 <SelectTrigger size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">Inget</SelectItem>
                   {targetOptions.cases.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.title}
@@ -142,20 +143,20 @@ function ComposerForm({
         required
         rows={3}
         maxLength={10000}
-        placeholder="What did you see, hear, or get told? Be specific: time, place, plates, who else was there."
-        aria-label="Note"
+        placeholder="Vad såg, hörde eller fick du veta? Var konkret: tid, plats, registreringsnummer, vilka fler som var där."
+        aria-label="Uppgift"
         autoFocus={Boolean(targetOptions)}
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Source</Label>
+          <Label className="text-xs text-muted-foreground">Källa</Label>
           <Select name="source" defaultValue="none">
             <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Unspecified</SelectItem>
+              <SelectItem value="none">Ej angiven</SelectItem>
               {NOTE_SOURCES.map((s) => (
                 <SelectItem key={s} value={s}>
                   {NOTE_SOURCE_LABELS[s]}
@@ -165,7 +166,7 @@ function ComposerForm({
           </Select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Confidence</Label>
+          <Label className="text-xs text-muted-foreground">Tillförlitlighet</Label>
           <Select name="confidence" defaultValue="medium">
             <SelectTrigger size="sm">
               <SelectValue />
@@ -180,8 +181,8 @@ function ComposerForm({
           </Select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs text-muted-foreground">Tags</Label>
-          <Input name="tags" list={listId} placeholder="drugs, weapons, tip" className="h-8" />
+          <Label className="text-xs text-muted-foreground">Taggar</Label>
+          <Input name="tags" list={listId} placeholder="narkotika, vapen, tips" className="h-8" />
           <datalist id={listId}>
             {tagSuggestions.map((t) => (
               <option key={t} value={t} />

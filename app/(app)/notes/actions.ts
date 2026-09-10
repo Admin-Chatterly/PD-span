@@ -19,7 +19,7 @@ const noteSchema = z.object({
   person_id: uuid.optional(),
   organization_id: uuid.optional(),
   case_id: uuid.optional(),
-  body: z.string().trim().min(1, "Write the note first.").max(10000),
+  body: z.string().trim().min(1, "Skriv uppgiften först.").max(10000),
   source: z.enum(NOTE_SOURCES).optional(),
   confidence: z.enum(CONFIDENCES).default("medium"),
 })
@@ -98,7 +98,7 @@ export async function addNote(_prev: FormState, formData: FormData): Promise<For
 export async function deleteNote(noteId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(noteId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
+  if (!id.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   // Read the targets first so the pages the note appeared on are refreshed too.

@@ -18,7 +18,7 @@ export async function generateMetadata(props: PageProps<"/organizations/[id]">):
   const { id } = await props.params
   const supabase = await createClient()
   const detail = await getOrganizationDetail(supabase, id)
-  return { title: detail ? detail.organization.name : "Not found" }
+  return { title: detail ? detail.organization.name : "Hittades inte" }
 }
 
 export default async function OrganizationPage(props: PageProps<"/organizations/[id]">) {
@@ -35,7 +35,7 @@ export default async function OrganizationPage(props: PageProps<"/organizations/
     <div className="flex flex-col gap-4">
       <Button asChild variant="ghost" size="sm" className="w-fit">
         <Link href="/organizations">
-          <ArrowLeftIcon /> Organizations
+          <ArrowLeftIcon /> Organisationer
         </Link>
       </Button>
 
@@ -47,7 +47,7 @@ export default async function OrganizationPage(props: PageProps<"/organizations/
             target={{ organizationId: organization.id }}
             notes={detail.notes}
             tagSuggestions={tagSuggestions}
-            emptyText="No intel logged on this organization yet."
+            emptyText="Inga underrättelser loggade på den här organisationen än."
           />
         </div>
         <div className="flex flex-col gap-4">
@@ -55,11 +55,11 @@ export default async function OrganizationPage(props: PageProps<"/organizations/
 
           <Card>
             <CardHeader>
-              <CardTitle>Cases</CardTitle>
+              <CardTitle>Ärenden</CardTitle>
             </CardHeader>
             <CardContent>
               {detail.caseLinks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Not tied to any case.</p>
+                <p className="text-sm text-muted-foreground">Inte kopplad till något ärende.</p>
               ) : (
                 <ul className="flex flex-col divide-y divide-border/60">
                   {detail.caseLinks.map((l) => (

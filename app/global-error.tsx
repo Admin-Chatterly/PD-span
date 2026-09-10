@@ -12,7 +12,7 @@ export default function GlobalError({
   reset: () => void
 }) {
   return (
-    <html lang="en">
+    <html lang="sv">
       <body
         style={{
           margin: 0,
@@ -27,9 +27,9 @@ export default function GlobalError({
         }}
       >
         <div style={{ maxWidth: "32rem" }}>
-          <h1 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>PD-span could not start</h1>
+          <h1 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>PD-span kunde inte starta</h1>
           <p style={{ color: "#a1a1aa", marginBottom: "1rem", lineHeight: 1.6 }}>
-            Something failed outside of any page. Reloading usually clears it.
+            Något gick fel utanför alla sidor. Att ladda om brukar räcka.
           </p>
           <pre
             style={{
@@ -41,8 +41,8 @@ export default function GlobalError({
               color: "#a1a1aa",
             }}
           >
-            {process.env.NODE_ENV === "production" ? "The server reported an error." : error.message}
-            {error.digest ? `\n\nReference: ${error.digest}` : ""}
+            {process.env.NODE_ENV === "production" ? "Servern rapporterade ett fel." : error.message}
+            {error.digest ? `\n\nReferens: ${error.digest}` : ""}
           </pre>
           <button
             onClick={reset}
@@ -56,7 +56,7 @@ export default function GlobalError({
               cursor: "pointer",
             }}
           >
-            Try again
+            Försök igen
           </button>
         </div>
       </body>

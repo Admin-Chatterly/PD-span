@@ -23,7 +23,7 @@ export function CasePeopleSection({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>People</CardTitle>
+        <CardTitle>Personer</CardTitle>
         <AddCaseLinkDialog
           caseId={caseId}
           kind="person"
@@ -33,7 +33,7 @@ export function CasePeopleSection({
       <CardContent>
         {links.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nobody linked yet. Link the suspects, witnesses and the unidentified alike.
+            Ingen är kopplad än. Koppla misstänkta, vittnen och oidentifierade.
           </p>
         ) : (
           <ul className="flex flex-col divide-y divide-border/60">
@@ -58,15 +58,15 @@ export function CasePeopleSection({
                     action={removeCaseLink.bind(null, l.id)}
                     variant="ghost"
                     size="icon-sm"
-                    title="Unlink from this case"
+                    title="Koppla bort från ärendet"
                     className="shrink-0 text-muted-foreground hover:text-destructive"
                     confirm={{
-                      title: `Unlink ${personLabel(l.person)}?`,
-                      description: "The record itself stays on file.",
-                      actionLabel: "Unlink",
+                      title: `Koppla bort ${personLabel(l.person)}?`,
+                      description: "Själva posten finns kvar i registret.",
+                      actionLabel: "Koppla bort",
                       destructive: true,
                     }}
-                    successMessage="Unlinked from the case"
+                    successMessage="Bortkopplad från ärendet"
                   >
                     <XIcon />
                   </ActionButton>
@@ -92,7 +92,7 @@ export function CaseOrganizationsSection({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Organizations</CardTitle>
+        <CardTitle>Organisationer</CardTitle>
         <AddCaseLinkDialog
           caseId={caseId}
           kind="organization"
@@ -102,7 +102,7 @@ export function CaseOrganizationsSection({
       </CardHeader>
       <CardContent>
         {links.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No organizations linked.</p>
+          <p className="text-sm text-muted-foreground">Inga organisationer kopplade.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border/60">
             {links.map((l) =>
@@ -127,15 +127,15 @@ export function CaseOrganizationsSection({
                     action={removeCaseLink.bind(null, l.id)}
                     variant="ghost"
                     size="icon-sm"
-                    title="Unlink from this case"
+                    title="Koppla bort från ärendet"
                     className="shrink-0 text-muted-foreground hover:text-destructive"
                     confirm={{
-                      title: `Unlink ${l.organization.name}?`,
-                      description: "The organization itself stays on file.",
-                      actionLabel: "Unlink",
+                      title: `Koppla bort ${l.organization.name}?`,
+                      description: "Själva organisationen finns kvar i registret.",
+                      actionLabel: "Koppla bort",
                       destructive: true,
                     }}
-                    successMessage="Unlinked from the case"
+                    successMessage="Bortkopplad från ärendet"
                   >
                     <XIcon />
                   </ActionButton>

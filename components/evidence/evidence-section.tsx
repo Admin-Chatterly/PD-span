@@ -8,7 +8,7 @@ export function EvidenceSection({ target, items }: { target: EvidenceTarget; ite
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Evidence</CardTitle>
+        <CardTitle>Bevis</CardTitle>
         <div className="flex gap-2">
           <UploadEvidenceDialog target={target} />
           <AddEvidenceLinkDialog target={target} />
@@ -17,8 +17,8 @@ export function EvidenceSection({ target, items }: { target: EvidenceTarget; ite
       <CardContent>
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nothing attached. Upload a screenshot, or paste a Medal.tv clip, a video link or an
-            image URL.
+            Inget bifogat. Ladda upp en skärmbild, eller klistra in ett Medal.tv-klipp, en
+            videolänk eller en bildadress.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">

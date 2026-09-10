@@ -11,7 +11,7 @@ import { revalidateCase, revalidateOrganization, revalidatePerson } from "@/lib/
 import { createClient } from "@/lib/supabase/server"
 
 const caseSchema = z.object({
-  title: z.string().trim().min(1, "Give the case a title.").max(200),
+  title: z.string().trim().min(1, "Ge ärendet en titel.").max(200),
   description: optionalText,
   status: z.enum(CASE_STATUSES).default("open"),
 })
@@ -38,7 +38,7 @@ export async function createCase(_prev: FormState, formData: FormData): Promise<
 export async function updateCase(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
   const id = uuid.safeParse(formData.get("id"))
-  if (!id.success) return { error: "Missing case id." }
+  if (!id.success) return { error: "Ärende-id saknas." }
   const parsed = parseCase(formData)
   if (!parsed.success) return { error: firstIssue(parsed.error) }
 
@@ -53,7 +53,7 @@ export async function updateCase(_prev: FormState, formData: FormData): Promise<
 export async function updateCaseStatus(caseId: string, status: string): Promise<ActionResult> {
   await requireUser()
   const parsed = z.object({ id: uuid, status: z.enum(CASE_STATUSES) }).safeParse({ id: caseId, status })
-  if (!parsed.success) return { ok: false, error: "Invalid status." }
+  if (!parsed.success) return { ok: false, error: "Ogiltig status." }
 
   const supabase = await createClient()
   const { error } = await supabase
@@ -69,7 +69,7 @@ export async function updateCaseStatus(caseId: string, status: string): Promise<
 export async function deleteCase(caseId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(caseId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
+  if (!id.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   // The people and organizations survive; only the links and the case itself go.
@@ -103,7 +103,7 @@ const caseLinkSchema = z
     role: optionalText,
   })
   .refine((v) => Boolean(v.person_id) !== Boolean(v.organization_id), {
-    message: "Pick either a person or an organization.",
+    message: "Välj antingen en person eller en organisation.",
   })
 
 export async function addCaseLink(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -111,7 +111,7 @@ export async function addCaseLink(_prev: FormState, formData: FormData): Promise
   const parsed = caseLinkSchema.safeParse(
     readFields(formData, ["case_id", "person_id", "organization_id", "role"])
   )
-  if (!parsed.success) return { error: firstIssue(parsed.error, "Pick something to link.") }
+  if (!parsed.success) return { error: firstIssue(parsed.error, "Välj något att koppla.") }
 
   const supabase = await createClient()
   const { error } = await supabase.from("case_links").insert({
@@ -121,7 +121,7 @@ export async function addCaseLink(_prev: FormState, formData: FormData): Promise
     role: parsed.data.role,
   })
   if (error) {
-    return { error: error.code === "23505" ? "That is already linked to this case." : error.message }
+    return { error: error.code === "23505" ? "Det är redan kopplat till ärendet." : error.message }
   }
 
   revalidateCase(parsed.data.case_id)
@@ -133,7 +133,7 @@ export async function addCaseLink(_prev: FormState, formData: FormData): Promise
 export async function removeCaseLink(linkId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(linkId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
+  if (!id.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   // Read the targets first so both sides of the link get refreshed.

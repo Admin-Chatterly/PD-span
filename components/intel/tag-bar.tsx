@@ -22,7 +22,7 @@ export function TagBar({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-xs text-muted-foreground">Tags</span>
+      <span className="text-xs text-muted-foreground">Taggar</span>
       {shown.map(({ tag, uses }) => {
         const active = filters.tag === tag
         return (
@@ -41,7 +41,7 @@ export function TagBar({
         )
       })}
       {tags.length > shown.length ? (
-        <span className="text-xs text-muted-foreground">+{tags.length - shown.length} more</span>
+        <span className="text-xs text-muted-foreground">+{tags.length - shown.length} till</span>
       ) : null}
     </div>
   )

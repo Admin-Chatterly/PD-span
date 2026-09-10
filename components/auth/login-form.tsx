@@ -25,8 +25,8 @@ export function LoginForm({ next, notice }: { next: string; notice?: string | nu
         <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
           <ShieldIcon className="size-6" />
         </div>
-        <CardTitle className="text-xl">PD-span Intelligence</CardTitle>
-        <CardDescription>Restricted. Sign in with your department account.</CardDescription>
+        <CardTitle className="text-xl">PD-span Underrättelser</CardTitle>
+        <CardDescription>Behörighet krävs. Logga in med ditt tjänstekonto.</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="flex flex-col gap-4">
@@ -37,7 +37,7 @@ export function LoginForm({ next, notice }: { next: string; notice?: string | nu
             </p>
           ) : null}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">E-post</Label>
             <Input
               id="email"
               name="email"
@@ -48,7 +48,7 @@ export function LoginForm({ next, notice }: { next: string; notice?: string | nu
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Lösenord</Label>
             <Input
               id="password"
               name="password"
@@ -64,7 +64,7 @@ export function LoginForm({ next, notice }: { next: string; notice?: string | nu
           ) : null}
           <Button type="submit" disabled={pending} className="w-full">
             {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-            Sign in
+            Logga in
           </Button>
         </form>
       </CardContent>

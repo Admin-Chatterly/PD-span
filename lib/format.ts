@@ -6,17 +6,17 @@ type PersonLike = {
   description?: string | null
 }
 
-/** Primary label: name, else alias, else "Unknown". */
+/** Huvudetikett: namn, annars alias, annars "Okänd". */
 export function personLabel(p: PersonLike): string {
-  return p.name?.trim() || p.alias?.trim() || "Unknown"
+  return p.name?.trim() || p.alias?.trim() || "Okänd"
 }
 
-/** True when there is no known name yet (the "Unknown" badge case). */
+/** Sant när namnet ännu är okänt (fallet med märkningen "Oidentifierad"). */
 export function isUnidentified(p: PersonLike): boolean {
   return !p.name?.trim()
 }
 
-/** Secondary line under the label: the alias when a name exists, else the description. */
+/** Rad under etiketten: aliaset när namn finns, annars signalementet. */
 export function personSecondary(p: PersonLike): string | null {
   if (p.name?.trim() && p.alias?.trim()) return `"${p.alias.trim()}"`
   if (!p.alias?.trim() || !p.name?.trim()) return p.description?.trim() || null
@@ -28,7 +28,7 @@ export function truncate(text: string, max = 120): string {
   return clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean
 }
 
-const absolute = new Intl.DateTimeFormat("en-GB", {
+const absolute = new Intl.DateTimeFormat("sv-SE", {
   day: "2-digit",
   month: "short",
   year: "numeric",
@@ -42,21 +42,21 @@ export function formatDateTime(iso: string | null | undefined): string {
 }
 
 export function formatRelative(iso: string | null | undefined, now: Date = new Date()): string {
-  if (!iso) return "never"
+  if (!iso) return "aldrig"
   const then = new Date(iso)
   const diffMs = now.getTime() - then.getTime()
   const minutes = Math.round(diffMs / 60_000)
-  if (minutes < 1) return "just now"
-  if (minutes < 60) return `${minutes} min ago`
+  if (minutes < 1) return "just nu"
+  if (minutes < 60) return `${minutes} min sedan`
   const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours} h ago`
+  if (hours < 24) return `${hours} tim sedan`
   const days = Math.round(hours / 24)
-  if (days === 1) return "yesterday"
-  if (days < 14) return `${days} d ago`
+  if (days === 1) return "i går"
+  if (days < 14) return `${days} dgr sedan`
   return absolute.format(then)
 }
 
-/** Organization affiliation summary as produced by the people_overview view. */
+/** Organisationstillhörighet som vyn people_overview levererar den. */
 export type OrganizationAffiliation = {
   id: string
   name: string

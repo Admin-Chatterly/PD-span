@@ -4,15 +4,15 @@ import { SupabaseNotConfigured } from "@/components/setup-help"
 import { safeNextPath } from "@/lib/auth"
 import { getSupabaseHost, isSupabaseConfigured } from "@/lib/supabase/env"
 
-export const metadata: Metadata = { title: "Sign in" }
+export const metadata: Metadata = { title: "Logga in" }
 
 export default async function LoginPage(props: PageProps<"/login">) {
   const searchParams = await props.searchParams
   const next = safeNextPath(searchParams.next)
-  // Fixed codes only; the text lives here, never in the URL.
+  // Endast fasta koder; texten bor här, aldrig i adressen.
   const notice =
     searchParams.reason === "session"
-      ? "Your session could not be verified, so you were signed out. Sign in again."
+      ? "Din session kunde inte verifieras, så du loggades ut. Logga in igen."
       : null
 
   if (!isSupabaseConfigured()) {
@@ -26,7 +26,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4">
       <LoginForm next={next} notice={notice} />
-      <p className="text-xs text-muted-foreground">Connected to {getSupabaseHost()}</p>
+      <p className="text-xs text-muted-foreground">Ansluten till {getSupabaseHost()}</p>
     </div>
   )
 }

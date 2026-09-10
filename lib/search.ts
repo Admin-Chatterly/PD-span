@@ -1,14 +1,14 @@
 import type { SearchHit } from "@/app/(app)/search/actions"
 
 export const SEARCH_KIND_LABELS: Record<string, string> = {
-  person: "People",
-  organization: "Organizations",
-  vehicle: "Vehicles",
-  note: "Intel",
-  case: "Cases",
+  person: "Personer",
+  organization: "Organisationer",
+  vehicle: "Fordon",
+  note: "Underrättelser",
+  case: "Ärenden",
 }
 
-/** The order results are grouped in, most often useful first. */
+/** Ordningen träffarna grupperas i, det mest användbara först. */
 export const SEARCH_KIND_ORDER = ["person", "vehicle", "organization", "note", "case"] as const
 
 /**

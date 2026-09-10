@@ -52,7 +52,7 @@ export function OrganizationForm(props: Props) {
       {organization ? <input type="hidden" name="id" value={organization.id} /> : null}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="org_name">Name</Label>
+        <Label htmlFor="org_name">Namn</Label>
         <Input
           id="org_name"
           name="name"
@@ -65,13 +65,13 @@ export function OrganizationForm(props: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="org_type">Type</Label>
+          <Label htmlFor="org_type">Typ</Label>
           <Select name="type" defaultValue={organization?.type ?? "none"}>
             <SelectTrigger id="org_type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Unknown</SelectItem>
+              <SelectItem value="none">Okänd</SelectItem>
               {ORGANIZATION_TYPES.map((t) => (
                 <SelectItem key={t} value={t}>
                   {ORGANIZATION_TYPE_LABELS[t]}
@@ -98,7 +98,7 @@ export function OrganizationForm(props: Props) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="org_territory">Territory</Label>
+        <Label htmlFor="org_territory">Territorium</Label>
         <Input
           id="org_territory"
           name="territory"
@@ -109,14 +109,14 @@ export function OrganizationForm(props: Props) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="org_notes">Notes</Label>
+        <Label htmlFor="org_notes">Anteckningar</Label>
         <Textarea
           id="org_notes"
           name="notes"
           rows={3}
           maxLength={4000}
           defaultValue={organization?.notes ?? ""}
-          placeholder="Colours, activities, known fronts"
+          placeholder="Färger, verksamhet, kända bulvanföretag"
         />
       </div>
 
@@ -129,11 +129,11 @@ export function OrganizationForm(props: Props) {
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          {props.mode === "create" ? "Create" : "Save"}
+          {props.mode === "create" ? "Skapa" : "Spara"}
         </Button>
         {props.mode === "edit" ? (
           <Button type="button" variant="ghost" onClick={props.onCancel} disabled={pending}>
-            Cancel
+            Avbryt
           </Button>
         ) : null}
       </div>
