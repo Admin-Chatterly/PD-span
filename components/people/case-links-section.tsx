@@ -7,11 +7,11 @@ export function CaseLinksSection({ caseLinks }: { caseLinks: CaseLinkRow[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cases</CardTitle>
+        <CardTitle>Ärenden</CardTitle>
       </CardHeader>
       <CardContent>
         {caseLinks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Not tied to any case. Linking arrives with case management.</p>
+          <p className="text-sm text-muted-foreground">Inte kopplad till något ärende.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border/60">
             {caseLinks.map((l) => (

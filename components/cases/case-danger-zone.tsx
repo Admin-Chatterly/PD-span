@@ -39,7 +39,7 @@ export function CaseDangerZone({
   return (
     <Card className="border-destructive/30">
       <CardHeader>
-        <CardTitle className="text-destructive">Case actions</CardTitle>
+        <CardTitle className="text-destructive">Ärendeåtgärder</CardTitle>
       </CardHeader>
       <CardContent>
         <AlertDialog>
@@ -48,31 +48,31 @@ export function CaseDangerZone({
               variant="outline"
               className="w-full justify-start text-destructive hover:text-destructive"
             >
-              <Trash2Icon /> Delete this case
+              <Trash2Icon /> Radera ärendet
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete {title}?</AlertDialogTitle>
+              <AlertDialogTitle>Radera {title}?</AlertDialogTitle>
               <AlertDialogDescription>
                 {counts.links > 0
-                  ? `${counts.links} link${counts.links === 1 ? "" : "s"} to people and organizations will be removed, but those records stay on file. `
-                  : "Nothing is linked to it. "}
+                  ? `${counts.links} ${counts.links === 1 ? "koppling" : "kopplingar"} till personer och organisationer tas bort, men posterna finns kvar i registret. `
+                  : "Ingenting är kopplat till det. "}
                 {counts.notes > 0
-                  ? `${counts.notes} note${counts.notes === 1 ? "" : "s"} logged against the case will be kept and detached, so the intel survives. `
+                  ? `${counts.notes} ${counts.notes === 1 ? "uppgift" : "uppgifter"} som loggats på ärendet behålls men kopplas loss, så underrättelserna finns kvar. `
                   : ""}
-                Consider closing the case instead if it may come back.
+                Överväg att avsluta ärendet i stället om det kan komma tillbaka.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Avbryt</AlertDialogCancel>
               <AlertDialogAction
                 onClick={run}
                 disabled={pending}
                 className="bg-destructive text-white hover:bg-destructive/90"
               >
                 {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-                Delete
+                Radera
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -19,7 +19,7 @@ export async function generateMetadata(props: PageProps<"/cases/[id]">): Promise
   const { id } = await props.params
   const supabase = await createClient()
   const detail = await getCaseDetail(supabase, id)
-  return { title: detail ? detail.caseRecord.title : "Not found" }
+  return { title: detail ? detail.caseRecord.title : "Hittades inte" }
 }
 
 export default async function CasePage(props: PageProps<"/cases/[id]">) {
@@ -36,7 +36,7 @@ export default async function CasePage(props: PageProps<"/cases/[id]">) {
     <div className="flex flex-col gap-4">
       <Button asChild variant="ghost" size="sm" className="w-fit">
         <Link href="/cases">
-          <ArrowLeftIcon /> Cases
+          <ArrowLeftIcon /> Ärenden
         </Link>
       </Button>
 
@@ -56,7 +56,7 @@ export default async function CasePage(props: PageProps<"/cases/[id]">) {
             target={{ caseId: caseRecord.id }}
             notes={detail.notes}
             tagSuggestions={tagSuggestions}
-            emptyText="No intel logged on this case yet."
+            emptyText="Inga underrättelser loggade på det här ärendet än."
           />
         </div>
         <div className="flex flex-col gap-4">

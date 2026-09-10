@@ -35,7 +35,7 @@ export const getCurrentProfile = cache(async (): Promise<CurrentProfile | null> 
     .select("callsign")
     .eq("id", user.id)
     .maybeSingle()
-  const fallback = user.email?.split("@")[0] ?? "Officer"
+  const fallback = user.email?.split("@")[0] ?? "Polis"
   return { ...user, callsign: data?.callsign?.trim() || fallback }
 })
 

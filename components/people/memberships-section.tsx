@@ -19,7 +19,7 @@ export function MembershipsSection({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Organizations</CardTitle>
+        <CardTitle>Organisationer</CardTitle>
         <AddMembershipDialog
           personId={personId}
           organizations={organizationOptions}
@@ -28,7 +28,7 @@ export function MembershipsSection({
       </CardHeader>
       <CardContent>
         {memberships.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No known affiliations.</p>
+          <p className="text-sm text-muted-foreground">Inga kända kopplingar.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border/60">
             {memberships.map((m) => (
@@ -48,8 +48,8 @@ export function MembershipsSection({
                     action={setMembershipConfirmed.bind(null, personId, m.organization.id, !m.is_confirmed)}
                     variant="ghost"
                     size="icon-sm"
-                    title={m.is_confirmed ? "Mark as suspected" : "Mark as confirmed"}
-                    successMessage={m.is_confirmed ? "Marked as suspected" : "Marked as confirmed"}
+                    title={m.is_confirmed ? "Markera som misstänkt" : "Markera som bekräftad"}
+                    successMessage={m.is_confirmed ? "Markerad som misstänkt" : "Markerad som bekräftad"}
                   >
                     {m.is_confirmed ? <UndoIcon /> : <CheckIcon />}
                   </ActionButton>
@@ -57,14 +57,14 @@ export function MembershipsSection({
                     action={removeMembership.bind(null, personId, m.organization.id)}
                     variant="ghost"
                     size="icon-sm"
-                    title="Remove"
+                    title="Ta bort"
                     className="text-muted-foreground hover:text-destructive"
                     confirm={{
-                      title: `Remove from ${m.organization.name}?`,
-                      actionLabel: "Remove",
+                      title: `Ta bort från ${m.organization.name}?`,
+                      actionLabel: "Ta bort",
                       destructive: true,
                     }}
-                    successMessage="Membership removed"
+                    successMessage="Medlemskapet borttaget"
                   >
                     <XIcon />
                   </ActionButton>

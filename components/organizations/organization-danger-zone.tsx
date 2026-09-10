@@ -40,16 +40,16 @@ export function OrganizationDangerZone({
 }) {
   const [pending, startTransition] = useTransition()
 
-  // Spell out what survives, because the answer differs per relation: people
-  // and their notes stay, join rows and attached evidence do not.
+  // Var tydlig med vad som blir kvar, eftersom svaret skiljer sig per relation:
+  // personer och deras uppgifter stannar, kopplingsrader och bevis gör det inte.
   const kept: string[] = []
-  if (counts.members > 0) kept.push(`${plural(counts.members, "member")} stay on file`)
-  if (counts.notes > 0) kept.push(`${plural(counts.notes, "note")} are kept but no longer linked here`)
+  if (counts.members > 0) kept.push(`${plural(counts.members, "medlem", "medlemmar")} blir kvar registrerade`)
+  if (counts.notes > 0) kept.push(`${plural(counts.notes, "uppgift", "uppgifter")} sparas men kopplas loss härifrån`)
 
   const removed: string[] = []
-  if (counts.members > 0) removed.push(plural(counts.members, "membership"))
-  if (counts.caseLinks > 0) removed.push(plural(counts.caseLinks, "case link"))
-  if (counts.evidence > 0) removed.push(`${plural(counts.evidence, "evidence item")} attached to it`)
+  if (counts.members > 0) removed.push(plural(counts.members, "medlemskap", "medlemskap"))
+  if (counts.caseLinks > 0) removed.push(plural(counts.caseLinks, "ärendekoppling", "ärendekopplingar"))
+  if (counts.evidence > 0) removed.push(`${plural(counts.evidence, "bevis", "bevis")} som är kopplade till den`)
 
   function run() {
     startTransition(async () => {
@@ -61,28 +61,28 @@ export function OrganizationDangerZone({
   return (
     <Card className="border-destructive/30">
       <CardHeader>
-        <CardTitle className="text-destructive">Record actions</CardTitle>
+        <CardTitle className="text-destructive">Åtgärder på posten</CardTitle>
       </CardHeader>
       <CardContent>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive">
-              <Trash2Icon /> Delete this organization
+              <Trash2Icon /> Ta bort organisationen
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete {name}?</AlertDialogTitle>
+              <AlertDialogTitle>Ta bort {name}?</AlertDialogTitle>
               <AlertDialogDescription>
-                {kept.length > 0 ? `${kept.join(", and ")}. ` : ""}
+                {kept.length > 0 ? `${kept.join(", och ")}. ` : ""}
                 {removed.length > 0
-                  ? `This deletes ${removed.join(", ")}. `
-                  : "Nothing else is attached. "}
-                Consider setting the status to disbanded instead, which keeps the history.
+                  ? `Detta tar bort ${removed.join(", ")}. `
+                  : "Inget annat är kopplat. "}
+                Överväg att sätta status till upplöst i stället, då behålls historiken.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Avbryt</AlertDialogCancel>
               <AlertDialogAction
                 onClick={run}
                 disabled={pending}

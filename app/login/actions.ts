@@ -22,10 +22,10 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     next: formData.get("next") ?? undefined,
   })
   if (!parsed.success) {
-    return { error: "Enter your email and password." }
+    return { error: "Fyll i e-postadress och lösenord." }
   }
   if (!isSupabaseConfigured()) {
-    return { error: "Supabase is not configured on this deployment. See the setup notice on the login page." }
+    return { error: "Supabase är inte konfigurerat för den här driftsättningen. Se meddelandet på inloggningssidan." }
   }
 
   const supabase = await createClient()

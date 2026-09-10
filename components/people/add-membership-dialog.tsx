@@ -42,21 +42,21 @@ export function AddMembershipDialog({ personId, organizations, existingIds }: Pr
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <PlusIcon /> Add
+          <PlusIcon /> Lägg till
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add to an organization</DialogTitle>
+          <DialogTitle>Koppla till en organisation</DialogTitle>
           <DialogDescription>
-            Suspected by default. Tick confirmed once the membership is established.
+            Misstänkt som standard. Kryssa i bekräftad när medlemskapet är fastställt.
           </DialogDescription>
         </DialogHeader>
         {available.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {organizations.length === 0
-              ? "No organizations exist yet. Create one from the Organizations page first."
-              : "Already listed in every organization on file."}
+              ? "Det finns inga organisationer ännu. Skapa en på Organisationer först."
+              : "Personen finns redan i alla registrerade organisationer."}
           </p>
         ) : (
           <MembershipForm personId={personId} organizations={available} onSaved={() => setOpen(false)} />
@@ -80,7 +80,7 @@ function MembershipForm({
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Membership added")
+      toast.success("Medlemskapet tillagt")
       onSaved()
     }
   }, [state, onSaved])
@@ -89,10 +89,10 @@ function MembershipForm({
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="person_id" value={personId} />
       <div className="flex flex-col gap-2">
-        <Label htmlFor="organization_id">Organization</Label>
+        <Label htmlFor="organization_id">Organisation</Label>
         <Select name="organization_id" required>
           <SelectTrigger id="organization_id">
-            <SelectValue placeholder="Pick one" />
+            <SelectValue placeholder="Välj en" />
           </SelectTrigger>
           <SelectContent>
             {organizations.map((o) => (
@@ -110,8 +110,8 @@ function MembershipForm({
         </Select>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="role">Role</Label>
-        <Input id="role" name="role" list={listId} placeholder="enforcer, dealer, leader…" maxLength={100} />
+        <Label htmlFor="role">Roll</Label>
+        <Input id="role" name="role" list={listId} placeholder="torped, langare, ledare…" maxLength={100} />
         <datalist id={listId}>
           {MEMBERSHIP_ROLE_SUGGESTIONS.map((r) => (
             <option key={r} value={r} />
@@ -120,7 +120,7 @@ function MembershipForm({
       </div>
       <div className="flex items-center gap-2">
         <Checkbox id="is_confirmed" name="is_confirmed" />
-        <Label htmlFor="is_confirmed">Confirmed member</Label>
+        <Label htmlFor="is_confirmed">Bekräftad medlem</Label>
       </div>
       {state.error ? (
         <p role="alert" className="text-sm text-destructive">
@@ -130,7 +130,7 @@ function MembershipForm({
       <DialogFooter>
         <Button type="submit" disabled={pending}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          Add membership
+          Lägg till medlemskap
         </Button>
       </DialogFooter>
     </form>

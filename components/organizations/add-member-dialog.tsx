@@ -36,15 +36,15 @@ export function AddMemberDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <UserPlusIcon /> Add member
+          <UserPlusIcon /> Lägg till medlem
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a member</DialogTitle>
+          <DialogTitle>Lägg till en medlem</DialogTitle>
           <DialogDescription>
-            Suspected by default. Tick confirmed once the membership is established. Anyone on file
-            can be added, including unidentified suspects.
+            Misstänkt som standard. Kryssa i bekräftad när medlemskapet är fastställt. Vem som helst
+            som är registrerad kan läggas till, även oidentifierade misstänkta.
           </DialogDescription>
         </DialogHeader>
         <MemberForm
@@ -72,7 +72,7 @@ function MemberForm({
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Member added")
+      toast.success("Medlemmen tillagd")
       onSaved()
     }
   }, [state, onSaved])
@@ -88,17 +88,17 @@ function MemberForm({
           value={picked}
           onChange={setPicked}
           excludeIds={memberIds}
-          placeholder="Search by name, alias or description"
+          placeholder="Sök på namn, alias eller signalement"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="member_role">Role</Label>
+        <Label htmlFor="member_role">Roll</Label>
         <Input
           id="member_role"
           name="role"
           list={listId}
-          placeholder="enforcer, dealer, leader…"
+          placeholder="torped, langare, ledare…"
           maxLength={100}
         />
         <datalist id={listId}>
@@ -110,7 +110,7 @@ function MemberForm({
 
       <div className="flex items-center gap-2">
         <Checkbox id="member_confirmed" name="is_confirmed" />
-        <Label htmlFor="member_confirmed">Confirmed member</Label>
+        <Label htmlFor="member_confirmed">Bekräftad medlem</Label>
       </div>
 
       {state.error ? (
@@ -122,7 +122,7 @@ function MemberForm({
       <DialogFooter>
         <Button type="submit" disabled={pending || !picked}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          Add member
+          Lägg till medlem
         </Button>
       </DialogFooter>
     </form>

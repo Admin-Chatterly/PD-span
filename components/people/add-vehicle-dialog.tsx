@@ -24,13 +24,13 @@ export function AddVehicleDialog({ personId }: { personId: string }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <PlusIcon /> Add
+          <PlusIcon /> Lägg till
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a vehicle</DialogTitle>
-          <DialogDescription>A plate or a model is enough. Plates are stored upper-case.</DialogDescription>
+          <DialogTitle>Lägg till ett fordon</DialogTitle>
+          <DialogDescription>Ett registreringsnummer eller en modell räcker. Regnr lagras med versaler.</DialogDescription>
         </DialogHeader>
         <VehicleForm personId={personId} onSaved={() => setOpen(false)} />
       </DialogContent>
@@ -43,7 +43,7 @@ function VehicleForm({ personId, onSaved }: { personId: string; onSaved: () => v
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Vehicle added")
+      toast.success("Fordonet tillagt")
       onSaved()
     }
   }, [state, onSaved])
@@ -53,21 +53,21 @@ function VehicleForm({ personId, onSaved }: { personId: string; onSaved: () => v
       <input type="hidden" name="person_id" value={personId} />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="plate">Plate</Label>
+          <Label htmlFor="plate">Registreringsnummer</Label>
           <Input id="plate" name="plate" placeholder="46EEK572" maxLength={16} className="font-mono uppercase" autoFocus />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="model">Model</Label>
+          <Label htmlFor="model">Modell</Label>
           <Input id="model" name="model" placeholder="Karin Sultan" maxLength={100} />
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="color">Colour</Label>
-        <Input id="color" name="color" placeholder="black, tinted windows" maxLength={100} />
+        <Label htmlFor="color">Färg</Label>
+        <Input id="color" name="color" placeholder="svart, tonade rutor" maxLength={100} />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="vehicle_notes">Notes</Label>
-        <Input id="vehicle_notes" name="notes" placeholder="Where seen, damage, modifications" maxLength={1000} />
+        <Label htmlFor="vehicle_notes">Anteckningar</Label>
+        <Input id="vehicle_notes" name="notes" placeholder="Var det setts, skador, ändringar" maxLength={1000} />
       </div>
       {state.error ? (
         <p role="alert" className="text-sm text-destructive">
@@ -77,7 +77,7 @@ function VehicleForm({ personId, onSaved }: { personId: string; onSaved: () => v
       <DialogFooter>
         <Button type="submit" disabled={pending}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          Add vehicle
+          Lägg till fordon
         </Button>
       </DialogFooter>
     </form>

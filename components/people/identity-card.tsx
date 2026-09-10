@@ -23,7 +23,7 @@ type Person = {
 }
 
 function initials(label: string): string {
-  if (label === "Unknown") return "?"
+  if (label === "Okänd") return "?"
   const parts = label.split(/\s+/).filter(Boolean)
   return parts
     .slice(0, 2)
@@ -61,7 +61,7 @@ export function IdentityCard({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={photoUrl}
-                alt={`Photo of ${label}`}
+                alt={`Foto på ${label}`}
                 className="size-16 shrink-0 rounded-full object-cover"
               />
             ) : (
@@ -80,17 +80,17 @@ export function IdentityCard({
               {person.description ? (
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{person.description}</p>
               ) : (
-                <p className="text-sm text-muted-foreground italic">No description yet.</p>
+                <p className="text-sm text-muted-foreground italic">Inget signalement ännu.</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Opened <RelativeTime iso={person.created_at} />
-                {createdBy ? ` by ${createdBy}` : ""} · updated <RelativeTime iso={person.updated_at} />
+                Öppnad <RelativeTime iso={person.created_at} />
+                {createdBy ? ` av ${createdBy}` : ""} · ändrad <RelativeTime iso={person.updated_at} />
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
               <StatusSelect personId={person.id} status={person.status} />
               <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                <PencilIcon /> Edit identity
+                <PencilIcon /> Ändra uppgifter
               </Button>
               <PhotoDialog personId={person.id} hasPhoto={Boolean(person.photo_path)} />
             </div>

@@ -173,7 +173,7 @@ begin
   assert (r.organizations -> 0 ->> 'is_confirmed')::boolean, 'membership flag';
 
   select * into r from public.people_overview where id = 'b0000000-0000-4000-8000-000000000005';
-  assert r.display_name = 'Unknown';
+  assert r.display_name = 'Okänd';
   assert r.organizations -> 0 ->> 'name' = 'Vagos';
   assert r.last_note_at is null;
 

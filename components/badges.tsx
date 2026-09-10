@@ -39,7 +39,7 @@ export function PersonStatusBadge({ status, className }: { status: string | null
 export function UnknownBadge({ className }: { className?: string }) {
   return (
     <Badge variant="outline" className={cn("border-dashed border-amber-500/50 text-amber-300", className)}>
-      Unidentified
+      Oidentifierad
     </Badge>
   )
 }
@@ -67,7 +67,7 @@ export function ConfidenceBadge({ confidence, className }: { confidence: string 
   const c: Confidence = pick(CONFIDENCES, confidence, "medium")
   return (
     <Badge variant="outline" className={cn(CONFIDENCE_STYLES[c], className)}>
-      {CONFIDENCE_LABELS[c]} confidence
+      Tillförlitlighet: {CONFIDENCE_LABELS[c]}
     </Badge>
   )
 }
@@ -84,18 +84,18 @@ export function CaseStatusBadge({ status, className }: { status: string | null |
 export function MembershipBadge({ isConfirmed, className }: { isConfirmed: boolean; className?: string }) {
   return isConfirmed ? (
     <Badge variant="outline" className={cn("border-emerald-500/40 bg-emerald-500/15 text-emerald-300", className)}>
-      Confirmed
+      Bekräftad
     </Badge>
   ) : (
     <Badge variant="outline" className={cn("border-dashed border-zinc-500/50 text-zinc-400", className)}>
-      Suspected
+      Misstänkt
     </Badge>
   )
 }
 
 /**
- * Tags are the cross-cutting filter, so every one of them is a way into the
- * intel page filtered by that tag.
+ * Taggar är filtret som går tvärs igenom allt, så var och en av dem är en väg in
+ * till underrättelsesidan filtrerad på just den taggen.
  */
 export function TagBadge({
   tag,
@@ -113,7 +113,7 @@ export function TagBadge({
   )
   if (!linked) return badge
   return (
-    <Link href={`/intel?tag=${encodeURIComponent(tag)}`} title={`Show intel tagged ${tag}`}>
+    <Link href={`/intel?tag=${encodeURIComponent(tag)}`} title={`Visa uppgifter taggade ${tag}`}>
       {badge}
     </Link>
   )

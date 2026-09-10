@@ -7,9 +7,9 @@ import { ACCEPTED_IMAGE_TYPES, formatBytes, validateImage } from "@/lib/upload"
 import { cn } from "@/lib/utils"
 
 /**
- * Screenshots are how this intel actually arrives, so the officer should never
- * have to save one to disk first. Accepts a paste from the clipboard, a drop, or
- * the file picker.
+ * Skärmbilder är hur de här uppgifterna faktiskt kommer in, så ingen ska behöva
+ * spara ner en fil först. Tar emot inklistring från urklipp, en släppt fil eller
+ * filväljaren.
  */
 export function ImageDropzone({
   file,
@@ -104,7 +104,7 @@ export function ImageDropzone({
               }}
               disabled={disabled}
             >
-              <XIcon /> Choose another
+              <XIcon /> Välj en annan
             </Button>
           </>
         ) : (
@@ -112,10 +112,10 @@ export function ImageDropzone({
             <ImageIcon className="size-6 text-muted-foreground" />
             <p className="text-sm">
               <span className="inline-flex items-center gap-1 font-medium">
-                <ClipboardPasteIcon className="size-3.5" /> Paste a screenshot
+                <ClipboardPasteIcon className="size-3.5" /> Klistra in en skärmbild
               </span>{" "}
               <span className="text-muted-foreground">
-                with ctrl+V, drop an image here, or
+                med ctrl+V, släpp en bild här, eller
               </span>
             </p>
             <Button
@@ -125,9 +125,9 @@ export function ImageDropzone({
               onClick={() => inputRef.current?.click()}
               disabled={disabled}
             >
-              Choose a file
+              Välj en fil
             </Button>
-            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF, up to 10 MB</p>
+            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP eller GIF, upp till 10 MB</p>
           </>
         )}
 

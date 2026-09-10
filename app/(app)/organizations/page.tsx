@@ -15,7 +15,7 @@ import {
 import { listOrganizations } from "@/lib/data/organizations"
 import { createClient } from "@/lib/supabase/server"
 
-export const metadata = { title: "Organizations" }
+export const metadata = { title: "Organisationer" }
 
 function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "")
@@ -32,10 +32,10 @@ export default async function OrganizationsPage(props: PageProps<"/organizations
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Organizations</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Organisationer</h1>
           {result.ok ? (
             <p className="text-sm text-muted-foreground">
-              {result.organizations.length} {tag ? "tagged" : "on file"}
+              {result.organizations.length} {tag ? "taggade" : "registrerade"}
             </p>
           ) : null}
         </div>
@@ -49,19 +49,19 @@ export default async function OrganizationsPage(props: PageProps<"/organizations
       ) : result.organizations.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
           {tag
-            ? "No organization has intel with that tag."
-            : "No organizations yet. Create the gangs and crews your department tracks, then add members from either side."}
+            ? "Ingen organisation har uppgifter med den taggen."
+            : "Inga organisationer ännu. Lägg upp de gäng och ligor ni följer, och lägg sedan till medlemmar från endera hållet."}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-48">Organization</TableHead>
-                <TableHead>Territory</TableHead>
-                <TableHead>Members</TableHead>
+                <TableHead className="min-w-48">Organisation</TableHead>
+                <TableHead>Territorium</TableHead>
+                <TableHead>Medlemmar</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Last note</TableHead>
+                <TableHead className="text-right">Senaste uppgiften</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -79,7 +79,7 @@ export default async function OrganizationsPage(props: PageProps<"/organizations
                   <TableCell className="text-sm">
                     {o.memberCount}
                     {o.memberCount > 0 ? (
-                      <span className="text-muted-foreground"> · {o.confirmedMemberCount} confirmed</span>
+                      <span className="text-muted-foreground"> · {o.confirmedMemberCount} bekräftade</span>
                     ) : null}
                   </TableCell>
                   <TableCell>

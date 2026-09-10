@@ -52,9 +52,9 @@ export const NOTE_ATTACHMENTS = ["any", "general", "attached"] as const
 export type NoteAttachment = (typeof NOTE_ATTACHMENTS)[number]
 
 export const NOTE_ATTACHMENT_LABELS: Record<NoteAttachment, string> = {
-  any: "Everything",
-  general: "General intel only",
-  attached: "Attached to a record",
+  any: "Allt",
+  general: "Endast allmänna uppgifter",
+  attached: "Kopplat till en post",
 }
 
 export type NotesListParams = {

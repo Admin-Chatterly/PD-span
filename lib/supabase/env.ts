@@ -47,7 +47,7 @@ export function getSupabaseEnv() {
   const { url, key } = readEnv()
   if (!url || !key) {
     throw new Error(
-      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (see README)."
+      "Supabase är inte konfigurerat. Sätt NEXT_PUBLIC_SUPABASE_URL och NEXT_PUBLIC_SUPABASE_ANON_KEY (se README)."
     )
   }
   return { url, key }

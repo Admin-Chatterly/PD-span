@@ -20,7 +20,7 @@ export async function generateMetadata(props: PageProps<"/people/[id]">): Promis
   const { id } = await props.params
   const supabase = await createClient()
   const detail = await getPersonDetail(supabase, id)
-  return { title: detail ? personLabel(detail.person) : "Not found" }
+  return { title: detail ? personLabel(detail.person) : "Hittades inte" }
 }
 
 export default async function PersonPage(props: PageProps<"/people/[id]">) {
@@ -38,7 +38,7 @@ export default async function PersonPage(props: PageProps<"/people/[id]">) {
     <div className="flex flex-col gap-4">
       <Button asChild variant="ghost" size="sm" className="w-fit">
         <Link href="/people">
-          <ArrowLeftIcon /> People
+          <ArrowLeftIcon /> Personer
         </Link>
       </Button>
 
@@ -50,7 +50,7 @@ export default async function PersonPage(props: PageProps<"/people/[id]">) {
             target={{ personId: person.id }}
             notes={detail.notes}
             tagSuggestions={tagSuggestions}
-            emptyText="Nothing logged yet. The first note usually explains why this person is on the board."
+            emptyText="Inget loggat ännu. Den första uppgiften brukar förklara varför personen finns på tavlan."
           />
         </div>
         <div className="flex flex-col gap-4">

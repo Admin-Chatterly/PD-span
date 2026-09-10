@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const NAV = [
-  { href: "/", label: "Dashboard" },
-  { href: "/people", label: "People" },
-  { href: "/organizations", label: "Organizations" },
-  { href: "/intel", label: "Intel" },
-  { href: "/cases", label: "Cases" },
-  { href: "/board", label: "Board" },
+  { href: "/", label: "Översikt" },
+  { href: "/people", label: "Personer" },
+  { href: "/organizations", label: "Organisationer" },
+  { href: "/intel", label: "Underrättelser" },
+  { href: "/cases", label: "Ärenden" },
+  { href: "/board", label: "Tavlan" },
 ] as const
 
 export function SiteHeader({ callsign }: { callsign: string }) {
@@ -27,7 +27,7 @@ export function SiteHeader({ callsign }: { callsign: string }) {
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
           <ShieldIcon className="size-5 text-primary" />
           <span>PD-span</span>
-          <span className="hidden text-muted-foreground sm:inline">Intel</span>
+          <span className="hidden text-muted-foreground sm:inline">Underrättelser</span>
         </Link>
         <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
           {NAV.map((item) => {
@@ -52,9 +52,9 @@ export function SiteHeader({ callsign }: { callsign: string }) {
           <LogIntelButton />
           <span className="hidden text-sm text-muted-foreground lg:inline">{callsign}</span>
           <form action={signOut}>
-            <Button type="submit" variant="ghost" size="sm" title="Sign out">
+            <Button type="submit" variant="ghost" size="sm" title="Logga ut">
               <LogOutIcon />
-              <span className="sr-only">Sign out</span>
+              <span className="sr-only">Logga ut</span>
             </Button>
           </form>
         </div>

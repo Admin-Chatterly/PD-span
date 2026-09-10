@@ -31,12 +31,12 @@ export async function addMembership(_prev: FormState, formData: FormData): Promi
     ...readFields(formData, ["person_id", "organization_id", "role"]),
     is_confirmed: readCheckbox(formData, "is_confirmed"),
   })
-  if (!parsed.success) return { error: "Pick both a person and an organization." }
+  if (!parsed.success) return { error: "Välj både en person och en organisation." }
 
   const supabase = await createClient()
   const { error } = await supabase.from("memberships").insert(parsed.data)
   if (error) {
-    return { error: error.code === "23505" ? "That membership already exists." : error.message }
+    return { error: error.code === "23505" ? "Det medlemskapet finns redan." : error.message }
   }
 
   revalidateBoth(parsed.data.person_id, parsed.data.organization_id)
@@ -73,7 +73,7 @@ export async function setMembershipConfirmed(
 ): Promise<ActionResult> {
   await requireUser()
   const parsed = pairSchema.safeParse({ person_id: personId, organization_id: organizationId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
+  if (!parsed.success) return { ok: false, error: "Ogiltiga id:n." }
 
   const supabase = await createClient()
   const { error } = await supabase
@@ -90,7 +90,7 @@ export async function setMembershipConfirmed(
 export async function removeMembership(personId: string, organizationId: string): Promise<ActionResult> {
   await requireUser()
   const parsed = pairSchema.safeParse({ person_id: personId, organization_id: organizationId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
+  if (!parsed.success) return { ok: false, error: "Ogiltiga id:n." }
 
   const supabase = await createClient()
   const { error } = await supabase

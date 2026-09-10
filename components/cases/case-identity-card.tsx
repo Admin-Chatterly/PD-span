@@ -43,22 +43,22 @@ export function CaseIdentityCard({
                   {caseRecord.description}
                 </p>
               ) : (
-                <p className="text-sm text-muted-foreground italic">No description yet.</p>
+                <p className="text-sm text-muted-foreground italic">Ingen beskrivning än.</p>
               )}
               <p className="text-xs text-muted-foreground">
-                {counts.people} {counts.people === 1 ? "person" : "people"} ·{" "}
+                {counts.people} {counts.people === 1 ? "person" : "personer"} ·{" "}
                 {counts.organizations}{" "}
-                {counts.organizations === 1 ? "organization" : "organizations"} · {counts.notes}{" "}
-                {counts.notes === 1 ? "note" : "notes"}
+                {counts.organizations === 1 ? "organisation" : "organisationer"} · {counts.notes}{" "}
+                {counts.notes === 1 ? "uppgift" : "uppgifter"}
               </p>
               <p className="text-xs text-muted-foreground">
-                Opened <RelativeTime iso={caseRecord.created_at} />
-                {createdBy ? ` by ${createdBy}` : ""} · updated{" "}
+                Öppnat <RelativeTime iso={caseRecord.created_at} />
+                {createdBy ? ` av ${createdBy}` : ""} · uppdaterat{" "}
                 <RelativeTime iso={caseRecord.updated_at} />
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <PencilIcon /> Edit case
+              <PencilIcon /> Redigera ärende
             </Button>
           </div>
         )}

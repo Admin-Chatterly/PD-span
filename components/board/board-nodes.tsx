@@ -1,7 +1,13 @@
 "use client"
 
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react"
-import { PERSON_STATUS_LABELS, PERSON_STATUSES, type PersonStatus } from "@/lib/constants"
+import {
+  ORGANIZATION_TYPE_LABELS,
+  PERSON_STATUS_LABELS,
+  PERSON_STATUSES,
+  type OrganizationType,
+  type PersonStatus,
+} from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
 /**
@@ -79,6 +85,10 @@ export type OrganizationNodeData = {
 export type OrganizationNode = Node<OrganizationNodeData, "organization">
 
 export function OrganizationBoardNode({ data, selected }: NodeProps<OrganizationNode>) {
+  const typeLabel = data.type
+    ? (ORGANIZATION_TYPE_LABELS[data.type as OrganizationType] ?? data.type)
+    : null
+
   return (
     <div
       className={cn(
@@ -90,9 +100,9 @@ export function OrganizationBoardNode({ data, selected }: NodeProps<Organization
     >
       <CentreHandles />
       <p className="truncate text-sm font-semibold text-foreground">{data.label}</p>
-      {data.type ? (
+      {typeLabel ? (
         <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
-          {data.type}
+          {typeLabel}
         </p>
       ) : null}
     </div>

@@ -16,7 +16,7 @@ import {
 } from "@/lib/data/notes"
 import { createClient } from "@/lib/supabase/server"
 
-export const metadata = { title: "Intel" }
+export const metadata = { title: "Underrättelser" }
 
 function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "")
@@ -58,24 +58,24 @@ export default async function IntelPage(props: PageProps<"/intel">) {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Intel</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Underrättelser</h1>
           {result.ok ? (
             <p className="text-sm text-muted-foreground">
-              {result.total} note{result.total === 1 ? "" : "s"}
-              {filtered ? " matching" : " logged"}
+              {result.total} {result.total === 1 ? "uppgift" : "uppgifter"}
+              {filtered ? " matchar" : " loggade"}
             </p>
           ) : null}
         </div>
         {filtered ? (
           <Button asChild variant="ghost" size="sm">
-            <Link href="/intel">Clear filters</Link>
+            <Link href="/intel">Rensa filter</Link>
           </Button>
         ) : null}
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Log intel</CardTitle>
+          <CardTitle>Logga underrättelse</CardTitle>
         </CardHeader>
         <CardContent>
           <NoteComposer
@@ -97,8 +97,8 @@ export default async function IntelPage(props: PageProps<"/intel">) {
               notes={result.notes}
               emptyText={
                 filtered
-                  ? "No intel matches those filters."
-                  : "Nothing logged yet. Anything you hear can go in here, even before you know who it is about."
+                  ? "Inga underrättelser matchar de filtren."
+                  : "Inget loggat än. Allt du hör kan hamna här, även innan du vet vem det handlar om."
               }
             />
           </CardContent>
@@ -107,8 +107,8 @@ export default async function IntelPage(props: PageProps<"/intel">) {
 
       {result.ok && result.total > result.notes.length ? (
         <p className="text-center text-xs text-muted-foreground">
-          Showing the {result.notes.length} most recent of {result.total}. Narrow the filters to see
-          older intel.
+          Visar de {result.notes.length} senaste av {result.total}. Smalna av filtren för att se
+          äldre underrättelser.
         </p>
       ) : null}
     </div>

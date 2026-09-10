@@ -9,20 +9,20 @@ export function VehiclesSection({ personId, vehicles }: { personId: string; vehi
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Vehicles</CardTitle>
+        <CardTitle>Fordon</CardTitle>
         <AddVehicleDialog personId={personId} />
       </CardHeader>
       <CardContent>
         {vehicles.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No vehicles on file.</p>
+          <p className="text-sm text-muted-foreground">Inga registrerade fordon.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border/60">
             {vehicles.map((v) => (
               <li key={v.id} className="flex items-start justify-between gap-2 py-2">
                 <div className="flex min-w-0 flex-col">
-                  <span className="font-mono text-base font-semibold tracking-wider">{v.plate ?? "NO PLATE"}</span>
+                  <span className="font-mono text-base font-semibold tracking-wider">{v.plate ?? "INGET REGNR"}</span>
                   <span className="text-sm text-muted-foreground">
-                    {[v.color, v.model].filter(Boolean).join(" ") || "Model unknown"}
+                    {[v.color, v.model].filter(Boolean).join(" ") || "Okänd modell"}
                   </span>
                   {v.notes ? <span className="text-xs text-muted-foreground">{v.notes}</span> : null}
                 </div>
@@ -31,8 +31,8 @@ export function VehiclesSection({ personId, vehicles }: { personId: string; vehi
                     action={unlinkVehicle.bind(null, v.id, personId)}
                     variant="ghost"
                     size="icon-sm"
-                    title="Unlink (keeps the vehicle on file without an owner)"
-                    successMessage="Vehicle unlinked"
+                    title="Koppla loss (fordonet finns kvar utan ägare)"
+                    successMessage="Fordonet bortkopplat"
                   >
                     <UnlinkIcon />
                   </ActionButton>
@@ -40,15 +40,15 @@ export function VehiclesSection({ personId, vehicles }: { personId: string; vehi
                     action={deleteVehicle.bind(null, v.id, personId)}
                     variant="ghost"
                     size="icon-sm"
-                    title="Delete"
+                    title="Ta bort"
                     className="text-muted-foreground hover:text-destructive"
                     confirm={{
-                      title: `Delete ${v.plate ?? "this vehicle"}?`,
-                      description: "Unlink instead if you only want to detach it from this person.",
-                      actionLabel: "Delete",
+                      title: `Ta bort ${v.plate ?? "fordonet"}?`,
+                      description: "Koppla loss i stället om du bara vill lossa det från personen.",
+                      actionLabel: "Ta bort",
                       destructive: true,
                     }}
-                    successMessage="Vehicle deleted"
+                    successMessage="Fordonet borttaget"
                   >
                     <Trash2Icon />
                   </ActionButton>

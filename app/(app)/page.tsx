@@ -21,7 +21,7 @@ import { getDashboardData } from "@/lib/data/dashboard"
 import { createClient } from "@/lib/supabase/server"
 import { isUnidentified, personLabel, personSecondary, truncate } from "@/lib/format"
 
-export const metadata = { title: "Dashboard" }
+export const metadata = { title: "Översikt" }
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -30,16 +30,16 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Översikt</h1>
         <div className="flex flex-wrap gap-2">
           <Button asChild>
             <Link href="/people/new">
-              <PlusIcon /> Add person
+              <PlusIcon /> Ny person
             </Link>
           </Button>
           <Button asChild variant="secondary">
             <Link href="/people">
-              <UsersIcon /> People
+              <UsersIcon /> Personer
             </Link>
           </Button>
         </div>
@@ -50,16 +50,16 @@ export default async function DashboardPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile label="People" value={data.counts.people} icon={UsersIcon} href="/people" />
+            <StatTile label="Personer" value={data.counts.people} icon={UsersIcon} href="/people" />
             <StatTile
-              label="Organizations"
+              label="Organisationer"
               value={data.counts.organizations}
               icon={BuildingIcon}
               href="/organizations"
             />
-            <StatTile label="Open cases" value={data.counts.openCases} icon={BriefcaseIcon} href="/cases" />
+            <StatTile label="Öppna ärenden" value={data.counts.openCases} icon={BriefcaseIcon} href="/cases" />
             <StatTile
-              label="Notes this week"
+              label="Uppgifter denna vecka"
               value={data.counts.notesThisWeek}
               icon={NotebookPenIcon}
               href="/people"
@@ -69,12 +69,12 @@ export default async function DashboardPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Recently added people</CardTitle>
+                <CardTitle>Nyligen tillagda personer</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col divide-y divide-border/60">
                 {data.recentPeople.length === 0 ? (
                   <p className="py-6 text-center text-sm text-muted-foreground">
-                    Nobody on file yet. Add the first person, even if all you have is a description.
+                    Ingen är registrerad ännu. Lägg upp den första personen, även om du bara har ett signalement.
                   </p>
                 ) : (
                   data.recentPeople.map((p) => {
@@ -112,12 +112,12 @@ export default async function DashboardPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Latest intel</CardTitle>
+                <CardTitle>Senaste uppgifterna</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col divide-y divide-border/60">
                 {data.recentNotes.length === 0 ? (
                   <p className="py-6 text-center text-sm text-muted-foreground">
-                    No notes logged yet.
+                    Inga uppgifter loggade ännu.
                   </p>
                 ) : (
                   data.recentNotes.map((n) => (
@@ -142,9 +142,9 @@ export default async function DashboardPage() {
                             {n.case.title}
                           </Link>
                         ) : null}
-                        {!n.person && !n.organization && !n.case ? <span>General intel</span> : null}
+                        {!n.person && !n.organization && !n.case ? <span>Allmän uppgift</span> : null}
                         <span>·</span>
-                        <span>{n.author?.callsign ?? "unknown officer"}</span>
+                        <span>{n.author?.callsign ?? "okänd kollega"}</span>
                         <span>·</span>
                         <RelativeTime iso={n.created_at} />
                       </div>

@@ -10,7 +10,7 @@ import { PERSON_STATUSES } from "@/lib/constants"
 import { listPeople, PEOPLE_SORTS, type PeopleSort } from "@/lib/data/people"
 import { createClient } from "@/lib/supabase/server"
 
-export const metadata = { title: "People" }
+export const metadata = { title: "Personer" }
 
 function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "")
@@ -41,16 +41,16 @@ export default async function PeoplePage(props: PageProps<"/people">) {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">People</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Personer</h1>
           {result.ok ? (
             <p className="text-sm text-muted-foreground">
-              {result.total} on file{filtered ? ", filtered" : ""}
+              {result.total} registrerade{filtered ? ", filtrerat" : ""}
             </p>
           ) : null}
         </div>
         <Button asChild>
           <Link href="/people/new">
-            <PlusIcon /> Add person
+            <PlusIcon /> Ny person
           </Link>
         </Button>
       </div>

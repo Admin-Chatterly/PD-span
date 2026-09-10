@@ -29,6 +29,6 @@ export function readCheckbox(formData: FormData, key: string): boolean {
   return formData.get(key) === "on"
 }
 
-export function firstIssue(error: z.ZodError, fallback = "Invalid input."): string {
+export function firstIssue(error: z.ZodError, fallback = "Ogiltig inmatning."): string {
   return error.issues[0]?.message ?? fallback
 }

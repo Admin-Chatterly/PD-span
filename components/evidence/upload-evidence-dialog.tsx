@@ -37,15 +37,15 @@ export function UploadEvidenceDialog({ target }: { target: EvidenceTarget }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <UploadIcon /> Upload
+          <UploadIcon /> Ladda upp
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload evidence</DialogTitle>
+          <DialogTitle>Ladda upp bevis</DialogTitle>
           <DialogDescription>
-            Take a screenshot with win+shift+S and paste it straight in. It goes into the private
-            bucket and is only ever served through a short-lived signed link.
+            Ta en skärmbild med win+shift+S och klistra in den direkt. Den hamnar i den privata
+            lagringen och visas bara via en kortlivad signerad länk.
           </DialogDescription>
         </DialogHeader>
         {/* Remounting clears the previous selection when the dialog reopens. */}
@@ -65,7 +65,7 @@ function UploadForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () =
 
   useEffect(() => {
     if (state.ok) {
-      toast.success("Evidence uploaded")
+      toast.success("Beviset uppladdat")
       onSaved()
     }
   }, [state, onSaved])
@@ -80,7 +80,7 @@ function UploadForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () =
     setError(null)
 
     if (!file) {
-      setError("Paste, drop or choose an image first.")
+      setError("Klistra in, släpp eller välj en bild först.")
       return
     }
 
@@ -99,7 +99,7 @@ function UploadForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () =
       // The hidden input is now filled in, so the server action can record it.
       requestAnimationFrame(() => formRef.current?.requestSubmit())
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The upload failed.")
+      setError(cause instanceof Error ? cause.message : "Uppladdningen misslyckades.")
     } finally {
       setUploading(false)
     }
@@ -119,12 +119,12 @@ function UploadForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () =
       <ImageDropzone file={file} onFile={setFile} onError={setError} disabled={pending} />
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="upload_caption">Caption</Label>
+        <Label htmlFor="upload_caption">Bildtext</Label>
         <Input
           id="upload_caption"
           name="caption"
           maxLength={500}
-          placeholder="What it shows, when, where"
+          placeholder="Vad det visar, när, var"
           disabled={pending}
         />
       </div>
@@ -138,7 +138,7 @@ function UploadForm({ target, onSaved }: { target: EvidenceTarget; onSaved: () =
       <DialogFooter>
         <Button type="submit" disabled={pending || !file}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : <UploadIcon />}
-          {uploading ? "Uploading…" : "Upload"}
+          {uploading ? "Laddar upp…" : "Ladda upp"}
         </Button>
       </DialogFooter>
     </form>

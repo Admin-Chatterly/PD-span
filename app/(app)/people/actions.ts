@@ -33,7 +33,7 @@ export async function createPerson(_prev: FormState, formData: FormData): Promis
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   const { name, alias, description } = parsed.data
   if (!name && !alias && !description) {
-    return { error: "Give at least a name, an alias, or a description." }
+    return { error: "Ange minst ett namn, ett alias eller en beskrivning." }
   }
 
   const supabase = await createClient()
@@ -49,7 +49,7 @@ export async function createPerson(_prev: FormState, formData: FormData): Promis
 export async function quickAddPerson(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
   const description = z.string().trim().min(1).max(4000).safeParse(formData.get("description"))
-  if (!description.success) return { error: "Describe the person first." }
+  if (!description.success) return { error: "Beskriv personen först." }
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -67,12 +67,12 @@ export async function quickAddPerson(_prev: FormState, formData: FormData): Prom
 export async function updatePerson(_prev: FormState, formData: FormData): Promise<FormState> {
   await requireUser()
   const id = uuid.safeParse(formData.get("id"))
-  if (!id.success) return { error: "Missing person id." }
+  if (!id.success) return { error: "Person-id saknas." }
   const parsed = personSchema.safeParse(readFields(formData, ["name", "alias", "description", "status"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   const { name, alias, description } = parsed.data
   if (!name && !alias && !description) {
-    return { error: "Keep at least a name, an alias, or a description." }
+    return { error: "Behåll minst ett namn, ett alias eller en beskrivning." }
   }
 
   const supabase = await createClient()
@@ -86,7 +86,7 @@ export async function updatePerson(_prev: FormState, formData: FormData): Promis
 export async function updatePersonStatus(personId: string, status: string): Promise<ActionResult> {
   await requireUser()
   const parsed = z.object({ id: uuid, status: z.enum(PERSON_STATUSES) }).safeParse({ id: personId, status })
-  if (!parsed.success) return { ok: false, error: "Invalid status." }
+  if (!parsed.success) return { ok: false, error: "Ogiltig status." }
 
   const supabase = await createClient()
   const { error } = await supabase
@@ -112,7 +112,7 @@ export async function setPersonPhoto(personId: string, storagePath: string): Pro
       path: z.string().trim().min(1).max(500).refine(isSafeStoragePath),
     })
     .safeParse({ id: personId, path: storagePath })
-  if (!parsed.success) return { ok: false, error: "Invalid photo." }
+  if (!parsed.success) return { ok: false, error: "Ogiltigt foto." }
 
   const supabase = await createClient()
   const { data: existing } = await supabase
@@ -141,7 +141,7 @@ export async function setPersonPhoto(personId: string, storagePath: string): Pro
 export async function removePersonPhoto(personId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(personId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
+  if (!id.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   const { data: existing } = await supabase
@@ -163,7 +163,7 @@ export async function removePersonPhoto(personId: string): Promise<ActionResult>
 export async function deletePerson(personId: string): Promise<ActionResult> {
   await requireUser()
   const id = uuid.safeParse(personId)
-  if (!id.success) return { ok: false, error: "Invalid id." }
+  if (!id.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   const { error } = await supabase.from("people").delete().eq("id", id.data)
@@ -177,8 +177,8 @@ export async function deletePerson(personId: string): Promise<ActionResult> {
 export async function mergePeople(keepId: string, dropId: string): Promise<ActionResult> {
   await requireUser()
   const parsed = z.object({ keep: uuid, drop: uuid }).safeParse({ keep: keepId, drop: dropId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
-  if (parsed.data.keep === parsed.data.drop) return { ok: false, error: "Pick two different people." }
+  if (!parsed.success) return { ok: false, error: "Ogiltiga id:n." }
+  if (parsed.data.keep === parsed.data.drop) return { ok: false, error: "Välj två olika personer." }
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("merge_people", {
@@ -216,15 +216,15 @@ export async function addAssociate(_prev: FormState, formData: FormData): Promis
       ...readFields(formData, ["person_id", "associate_id", "relationship"]),
       is_confirmed: formData.get("is_confirmed") === "on",
     })
-  if (!parsed.success) return { error: "Pick a person to link." }
+  if (!parsed.success) return { error: "Välj en person att koppla." }
   if (parsed.data.person_id === parsed.data.associate_id) {
-    return { error: "A person cannot be linked to themselves." }
+    return { error: "En person kan inte kopplas till sig själv." }
   }
 
   const supabase = await createClient()
   const { error } = await supabase.from("associates").insert(parsed.data)
   if (error) {
-    return { error: error.code === "23505" ? "Those two are already linked." : error.message }
+    return { error: error.code === "23505" ? "De två är redan kopplade." : error.message }
   }
 
   revalidatePerson(parsed.data.person_id)
@@ -235,7 +235,7 @@ export async function addAssociate(_prev: FormState, formData: FormData): Promis
 export async function removeAssociate(personId: string, otherId: string): Promise<ActionResult> {
   await requireUser()
   const parsed = z.object({ a: uuid, b: uuid }).safeParse({ a: personId, b: otherId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
+  if (!parsed.success) return { ok: false, error: "Ogiltiga id:n." }
   const [first, second] = [parsed.data.a, parsed.data.b].sort()
 
   const supabase = await createClient()
@@ -268,7 +268,7 @@ export async function addVehicle(_prev: FormState, formData: FormData): Promise<
     .safeParse(readFields(formData, ["person_id", "plate", "model", "color", "notes"]))
   if (!parsed.success) return { error: firstIssue(parsed.error) }
   if (!parsed.data.plate && !parsed.data.model) {
-    return { error: "Give at least a plate or a model." }
+    return { error: "Ange minst en registreringsskylt eller en modell." }
   }
 
   const supabase = await createClient()
@@ -285,7 +285,7 @@ export async function addVehicle(_prev: FormState, formData: FormData): Promise<
 export async function unlinkVehicle(vehicleId: string, personId: string): Promise<ActionResult> {
   await requireUser()
   const parsed = z.object({ v: uuid, p: uuid }).safeParse({ v: vehicleId, p: personId })
-  if (!parsed.success) return { ok: false, error: "Invalid ids." }
+  if (!parsed.success) return { ok: false, error: "Ogiltiga id:n." }
 
   const supabase = await createClient()
   const { error } = await supabase.from("vehicles").update({ person_id: null }).eq("id", parsed.data.v)
@@ -298,7 +298,7 @@ export async function unlinkVehicle(vehicleId: string, personId: string): Promis
 export async function deleteVehicle(vehicleId: string, personId: string | null): Promise<ActionResult> {
   await requireUser()
   const v = uuid.safeParse(vehicleId)
-  if (!v.success) return { ok: false, error: "Invalid id." }
+  if (!v.success) return { ok: false, error: "Ogiltigt id." }
 
   const supabase = await createClient()
   const { error } = await supabase.from("vehicles").delete().eq("id", v.data)

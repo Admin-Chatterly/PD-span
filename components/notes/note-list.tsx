@@ -19,13 +19,13 @@ function sourceLabel(source: string | null): string | null {
 }
 
 /**
- * The intel feed, newest first. Each note links to the other records it is
- * attached to, skipping the page it is already being shown on.
+ * Flödet av uppgifter, nyast först. Varje uppgift länkar till de andra poster
+ * den är kopplad till, utom den sida den redan visas på.
  */
 export function NoteList({
   notes,
   target = {},
-  emptyText = "Nothing logged yet.",
+  emptyText = "Inget loggat ännu.",
 }: {
   notes: NoteRow[]
   target?: NotesTarget
@@ -63,7 +63,7 @@ export function NoteList({
               ) : null}
               {unattached ? (
                 <Badge variant="outline" className="border-dashed border-amber-500/50 text-amber-300">
-                  General intel
+                  Allmän uppgift
                 </Badge>
               ) : null}
               {note.tags.map((t) => (
@@ -72,7 +72,7 @@ export function NoteList({
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="flex flex-wrap items-center gap-x-2">
-                <span>{note.author?.callsign ?? "unknown officer"}</span>
+                <span>{note.author?.callsign ?? "okänd kollega"}</span>
                 <span>·</span>
                 <RelativeTime iso={note.created_at} />
                 {related.map((r) => (
@@ -90,15 +90,15 @@ export function NoteList({
                 size="xs"
                 className="text-muted-foreground hover:text-destructive"
                 confirm={{
-                  title: "Delete this note?",
-                  description: "It is removed for everyone. There is no undo.",
-                  actionLabel: "Delete",
+                  title: "Ta bort uppgiften?",
+                  description: "Den försvinner för alla. Det går inte att ångra.",
+                  actionLabel: "Ta bort",
                   destructive: true,
                 }}
-                successMessage="Note deleted"
+                successMessage="Uppgiften borttagen"
               >
                 <Trash2Icon />
-                Delete
+                Ta bort
               </ActionButton>
             </div>
           </li>

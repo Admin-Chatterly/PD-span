@@ -44,27 +44,27 @@ export function CaseForm(props: Props) {
       {record ? <input type="hidden" name="id" value={record.id} /> : null}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="case_title">Title</Label>
+        <Label htmlFor="case_title">Titel</Label>
         <Input
           id="case_title"
           name="title"
           required
           maxLength={200}
           defaultValue={record?.title ?? ""}
-          placeholder="Operation Green Light"
+          placeholder="Operation Grönt ljus"
           autoFocus
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="case_description">Description</Label>
+        <Label htmlFor="case_description">Beskrivning</Label>
         <Textarea
           id="case_description"
           name="description"
           rows={3}
           maxLength={4000}
           defaultValue={record?.description ?? ""}
-          placeholder="What is being investigated, and what would close it."
+          placeholder="Vad utreds, och vad krävs för att avsluta ärendet."
         />
       </div>
 
@@ -93,11 +93,11 @@ export function CaseForm(props: Props) {
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
           {pending ? <LoaderCircleIcon className="animate-spin" /> : null}
-          {props.mode === "create" ? "Open case" : "Save"}
+          {props.mode === "create" ? "Öppna ärende" : "Spara"}
         </Button>
         {props.mode === "edit" ? (
           <Button type="button" variant="ghost" onClick={props.onCancel} disabled={pending}>
-            Cancel
+            Avbryt
           </Button>
         ) : null}
       </div>

@@ -64,9 +64,9 @@ export function IntelToolbar(filters: IntelFilters) {
         <Input
           value={term}
           onChange={(e) => onTermChange(e.target.value)}
-          placeholder="Search the intel log"
+          placeholder="Sök i underrättelseloggen"
           className="pl-8 pr-8"
-          aria-label="Search notes"
+          aria-label="Sök uppgifter"
         />
         {pending ? (
           <LoaderCircleIcon className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -77,7 +77,7 @@ export function IntelToolbar(filters: IntelFilters) {
             size="icon"
             className="absolute top-1/2 right-0.5 size-8 -translate-y-1/2"
             onClick={() => onTermChange("")}
-            aria-label="Clear search"
+            aria-label="Rensa sökningen"
           >
             <XIcon />
           </Button>
@@ -88,11 +88,11 @@ export function IntelToolbar(filters: IntelFilters) {
         value={filters.source || "all"}
         onValueChange={(v) => navigate({ source: v === "all" ? "" : v })}
       >
-        <SelectTrigger className="lg:w-44" aria-label="Filter by source">
-          <SelectValue placeholder="Any source" />
+        <SelectTrigger className="lg:w-44" aria-label="Filtrera på källa">
+          <SelectValue placeholder="Alla källor" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Any source</SelectItem>
+          <SelectItem value="all">Alla källor</SelectItem>
           {NOTE_SOURCES.map((s) => (
             <SelectItem key={s} value={s}>
               {NOTE_SOURCE_LABELS[s]}
@@ -105,11 +105,11 @@ export function IntelToolbar(filters: IntelFilters) {
         value={filters.confidence || "all"}
         onValueChange={(v) => navigate({ confidence: v === "all" ? "" : v })}
       >
-        <SelectTrigger className="lg:w-44" aria-label="Filter by confidence">
-          <SelectValue placeholder="Any confidence" />
+        <SelectTrigger className="lg:w-44" aria-label="Filtrera på tillförlitlighet">
+          <SelectValue placeholder="All tillförlitlighet" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Any confidence</SelectItem>
+          <SelectItem value="all">All tillförlitlighet</SelectItem>
           {CONFIDENCES.map((c) => (
             <SelectItem key={c} value={c}>
               {CONFIDENCE_LABELS[c]}
@@ -122,7 +122,7 @@ export function IntelToolbar(filters: IntelFilters) {
         value={filters.attachment || "any"}
         onValueChange={(v) => navigate({ attachment: v })}
       >
-        <SelectTrigger className="lg:w-52" aria-label="Filter by attachment">
+        <SelectTrigger className="lg:w-52" aria-label="Filtrera på bilaga">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

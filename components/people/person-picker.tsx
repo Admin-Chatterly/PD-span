@@ -23,7 +23,7 @@ type Props = {
   placeholder?: string
 }
 
-/** Inline search-and-pick for a person. Results come from a server action. */
+/** Sök och välj en person direkt. Träffarna kommer från en server-action. */
 export function PersonPicker({ value, onChange, excludeIds = [], placeholder }: Props) {
   const [term, setTerm] = useState("")
   const [results, setResults] = useState<PersonPick[]>([])
@@ -56,7 +56,7 @@ export function PersonPicker({ value, onChange, excludeIds = [], placeholder }: 
             <p className="truncate text-xs text-muted-foreground">{truncate(secondary, 90)}</p>
           ) : null}
         </div>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={() => onChange(null)} aria-label="Clear">
+        <Button type="button" variant="ghost" size="icon-sm" onClick={() => onChange(null)} aria-label="Rensa">
           <XIcon />
         </Button>
       </div>
@@ -68,7 +68,7 @@ export function PersonPicker({ value, onChange, excludeIds = [], placeholder }: 
       <CommandInput
         value={term}
         onValueChange={setTerm}
-        placeholder={placeholder ?? "Search by name, alias or description"}
+        placeholder={placeholder ?? "Sök på namn, alias eller signalement"}
       />
       <CommandList className="max-h-56">
         {pending && results.length === 0 ? (
@@ -76,7 +76,7 @@ export function PersonPicker({ value, onChange, excludeIds = [], placeholder }: 
             <LoaderCircleIcon className="size-4 animate-spin" />
           </div>
         ) : null}
-        <CommandEmpty>No one found.</CommandEmpty>
+        <CommandEmpty>Ingen hittades.</CommandEmpty>
         <CommandGroup>
           {results.map((p) => {
             const secondary = personSecondary(p)

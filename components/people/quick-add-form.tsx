@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 
 const initialState: FormState = {}
 
-/** One field, one click: opens a file on someone with only a description. */
+/** Ett fält, ett klick: öppnar en akt på någon med bara ett signalement. */
 export function QuickAddForm() {
   const [state, formAction, pending] = useActionState(quickAddPerson, initialState)
 
@@ -19,12 +19,12 @@ export function QuickAddForm() {
           name="description"
           required
           maxLength={4000}
-          placeholder='Quick add an unknown: "tall, red ski mask, drives a black Sultan, seen at the corner store"'
-          aria-label="Description of the person"
+          placeholder='Snabbregistrera en okänd: "lång, röd rånarluva, kör en svart Sultan, sedd vid gatuhörnet"'
+          aria-label="Signalement"
         />
         <Button type="submit" disabled={pending} variant="secondary">
           {pending ? <LoaderCircleIcon className="animate-spin" /> : <ZapIcon />}
-          Open file
+          Öppna akt
         </Button>
       </div>
       {state.error ? (
